@@ -20,7 +20,7 @@ import (
 type ProvisioningService interface {
 	RunInitProvisioners() error
 	RunProvisioner(provisionerUID string) error
-	GetDashboardProvisionerResolvedPath(name string) string
+	GetProvisionerResolvedPath(provisionerUID, name string) (string, error)
 	GetAllowUIUpdatesFromConfig(name string) bool
 	registry.BackgroundService
 }
@@ -182,6 +182,15 @@ func (ps *provisioningServiceImpl) ProvisionDashboards() error {
 	}
 	ps.dashboardProvisioner = dashProvisioner
 	return nil
+}
+
+func (ps *provisioningServiceImpl) GetProvisionerResolvedPath(provisionerUID, name string) (string, error) {
+	switch provisionerUID {
+	case DashboardProvisionerUID:
+		return ps.dashboardProvisioner.GetProvisionerResolvedPath(name), nil
+	default:
+		return "", ErrUnknownProvisioner
+	}
 }
 
 func (ps *provisioningServiceImpl) GetDashboardProvisionerResolvedPath(name string) string {

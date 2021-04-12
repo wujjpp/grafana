@@ -3,20 +3,20 @@ package provisioning
 import "context"
 
 type Calls struct {
-	RunInitProvisioners                 []interface{}
-	RunProvisioner                      []interface{}
-	Run                                 []interface{}
-	GetDashboardProvisionerResolvedPath []interface{}
-	GetAllowUIUpdatesFromConfig         []interface{}
+	RunInitProvisioners         []interface{}
+	RunProvisioner              []interface{}
+	Run                         []interface{}
+	GetProvisionerResolvedPath  []interface{}
+	GetAllowUIUpdatesFromConfig []interface{}
 }
 
 type ProvisioningServiceMock struct {
-	Calls                                   *Calls
-	RunInitProvisionersFunc                 func() error
-	RunProvisionerFunc                      func(provisionerUID string) error
-	GetDashboardProvisionerResolvedPathFunc func(name string) string
-	GetAllowUIUpdatesFromConfigFunc         func(name string) bool
-	RunFunc                                 func(ctx context.Context) error
+	Calls                           *Calls
+	RunInitProvisionersFunc         func() error
+	RunProvisionerFunc              func(provisionerUID string) error
+	GetProvisionerResolvedPathFunc  func(provisionerUID, name string) (string, error)
+	GetAllowUIUpdatesFromConfigFunc func(name string) bool
+	RunFunc                         func(ctx context.Context) error
 }
 
 func NewProvisioningServiceMock() *ProvisioningServiceMock {
@@ -28,7 +28,7 @@ func NewProvisioningServiceMock() *ProvisioningServiceMock {
 func (mock *ProvisioningServiceMock) RunInitProvisioners() error {
 	mock.Calls.RunInitProvisioners = append(mock.Calls.RunInitProvisioners, nil)
 	if mock.RunInitProvisionersFunc != nil {
-		return mock.RunInitProvisioners()
+		return mock.RunInitProvisionersFunc()
 	}
 	return nil
 }
@@ -36,17 +36,17 @@ func (mock *ProvisioningServiceMock) RunInitProvisioners() error {
 func (mock *ProvisioningServiceMock) RunProvisioner(provisionerUID string) error {
 	mock.Calls.RunProvisioner = append(mock.Calls.RunProvisioner, provisionerUID)
 	if mock.RunProvisionerFunc != nil {
-		return mock.RunProvisioner(provisionerUID)
+		return mock.RunProvisionerFunc(provisionerUID)
 	}
 	return nil
 }
 
-func (mock *ProvisioningServiceMock) GetDashboardProvisionerResolvedPath(name string) string {
-	mock.Calls.GetDashboardProvisionerResolvedPath = append(mock.Calls.GetDashboardProvisionerResolvedPath, name)
-	if mock.GetDashboardProvisionerResolvedPathFunc != nil {
-		return mock.GetDashboardProvisionerResolvedPathFunc(name)
+func (mock *ProvisioningServiceMock) GetProvisionerResolvedPath(provisionerUID, name string) (string, error) {
+	mock.Calls.GetProvisionerResolvedPath = append(mock.Calls.GetProvisionerResolvedPath, provisionerUID, name)
+	if mock.GetProvisionerResolvedPathFunc != nil {
+		return mock.GetProvisionerResolvedPathFunc(provisionerUID, name)
 	}
-	return ""
+	return "", nil
 }
 
 func (mock *ProvisioningServiceMock) GetAllowUIUpdatesFromConfig(name string) bool {

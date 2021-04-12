@@ -10,6 +10,7 @@ import (
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
 	"github.com/grafana/grafana/pkg/services/dashboards"
+	"github.com/grafana/grafana/pkg/services/provisioning"
 
 	"github.com/grafana/grafana/pkg/api/dtos"
 	"github.com/grafana/grafana/pkg/api/response"
@@ -133,8 +134,13 @@ func (hs *HTTPServer) GetDashboard(c *models.ReqContext) response.Response {
 			meta.Provisioned = true
 		}
 
+		dashboardProvisionerResolvedPath, err := hs.ProvisioningService.GetProvisionerResolvedPath(provisioning.DashboardProvisionerUID, provisioningData.Name)
+		if err != nil {
+			// This can never happen since we provide a known provisioner for sure: DashboardProvisionerUID
+			hs.log.Warn("Failed to get ProvisionerResolvedPath", "err", err)
+		}
 		meta.ProvisionedExternalId, err = filepath.Rel(
-			hs.ProvisioningService.GetDashboardProvisionerResolvedPath(provisioningData.Name),
+			dashboardProvisionerResolvedPath,
 			provisioningData.ExternalId,
 		)
 		if err != nil {

@@ -1043,8 +1043,8 @@ func TestDashboardAPIEndpoint(t *testing.T) {
 			setUp()
 
 			mock := provisioning.NewProvisioningServiceMock()
-			mock.GetDashboardProvisionerResolvedPathFunc = func(name string) string {
-				return "/tmp/grafana/dashboards"
+			mock.GetProvisionerResolvedPathFunc = func(provisionerUID, name string) (string, error) {
+				return "/tmp/grafana/dashboards", nil
 			}
 
 			dash := getDashboardShouldReturn200WithConfig(sc, mock)
@@ -1056,8 +1056,8 @@ func TestDashboardAPIEndpoint(t *testing.T) {
 			setUp()
 
 			mock := provisioning.NewProvisioningServiceMock()
-			mock.GetDashboardProvisionerResolvedPathFunc = func(name string) string {
-				return "/tmp/grafana/dashboards"
+			mock.GetProvisionerResolvedPathFunc = func(provisionerUID, name string) (string, error) {
+				return "/tmp/grafana/dashboards", nil
 			}
 			mock.GetAllowUIUpdatesFromConfigFunc = func(name string) bool {
 				return true
