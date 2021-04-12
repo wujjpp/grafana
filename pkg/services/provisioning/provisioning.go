@@ -25,14 +25,6 @@ type ProvisioningService interface {
 	registry.BackgroundService
 }
 
-// type ProvisioningService interface {
-//     RunInitProvisioners() error
-//     RunProvisioner(provisionerUID string) error
-//     GetProvisionerResolvedPath(provisionerUID, name string) string
-//     GetAllowUIUpdatesFromConfig(provisionerUID, name string) bool
-//     BackgroundService
-// }
-
 func init() {
 	registry.Register(&registry.Descriptor{
 		Name: "ProvisioningService",
