@@ -21,7 +21,7 @@ type ProvisioningService interface {
 	RunInitProvisioners() error
 	RunProvisioner(provisionerUID string) error
 	GetProvisionerResolvedPath(provisionerUID, name string) (string, error)
-	GetAllowUIUpdatesFromConfig(name string) bool
+	GetAllowUIUpdatesFromConfig(provisionerUID, name string) (bool, error)
 	registry.BackgroundService
 }
 
@@ -193,12 +193,13 @@ func (ps *provisioningServiceImpl) GetProvisionerResolvedPath(provisionerUID, na
 	}
 }
 
-func (ps *provisioningServiceImpl) GetDashboardProvisionerResolvedPath(name string) string {
-	return ps.dashboardProvisioner.GetProvisionerResolvedPath(name)
-}
-
-func (ps *provisioningServiceImpl) GetAllowUIUpdatesFromConfig(name string) bool {
-	return ps.dashboardProvisioner.GetAllowUIUpdatesFromConfig(name)
+func (ps *provisioningServiceImpl) GetAllowUIUpdatesFromConfig(provisionerUID, name string) (bool, error) {
+	switch provisionerUID {
+	case DashboardProvisionerUID:
+		return ps.dashboardProvisioner.GetAllowUIUpdatesFromConfig(name), nil
+	default:
+		return false, ErrUnknownProvisioner
+	}
 }
 
 func (ps *provisioningServiceImpl) cancelPolling() {

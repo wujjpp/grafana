@@ -129,7 +129,11 @@ func (hs *HTTPServer) GetDashboard(c *models.ReqContext) response.Response {
 	}
 
 	if provisioningData != nil {
-		allowUIUpdate := hs.ProvisioningService.GetAllowUIUpdatesFromConfig(provisioningData.Name)
+		allowUIUpdate, err := hs.ProvisioningService.GetAllowUIUpdatesFromConfig(provisioning.DashboardProvisionerUID, provisioningData.Name)
+		if err != nil {
+			// This can never happen since we provide a known provisioner for sure: DashboardProvisionerUID
+			hs.log.Warn("Failed to get AllowUIUpdatesFromConfig bool", "err", err)
+		}
 		if !allowUIUpdate {
 			meta.Provisioned = true
 		}
@@ -277,7 +281,11 @@ func (hs *HTTPServer) PostDashboard(c *models.ReqContext, cmd models.SaveDashboa
 
 	allowUiUpdate := true
 	if provisioningData != nil {
-		allowUiUpdate = hs.ProvisioningService.GetAllowUIUpdatesFromConfig(provisioningData.Name)
+		allowUiUpdate, err = hs.ProvisioningService.GetAllowUIUpdatesFromConfig(provisioning.DashboardProvisionerUID, provisioningData.Name)
+		if err != nil {
+			// This can never happen since we provide a known provisioner for sure: DashboardProvisionerUID
+			hs.log.Warn("Failed to get AllowUIUpdatesFromConfig bool", "err", err)
+		}
 	}
 
 	if hs.Cfg.IsPanelLibraryEnabled() {

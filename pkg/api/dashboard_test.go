@@ -1059,8 +1059,8 @@ func TestDashboardAPIEndpoint(t *testing.T) {
 			mock.GetProvisionerResolvedPathFunc = func(provisionerUID, name string) (string, error) {
 				return "/tmp/grafana/dashboards", nil
 			}
-			mock.GetAllowUIUpdatesFromConfigFunc = func(name string) bool {
-				return true
+			mock.GetAllowUIUpdatesFromConfigFunc = func(provisionerUID, name string) (bool, error) {
+				return true, nil
 			}
 
 			hs := &HTTPServer{

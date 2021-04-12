@@ -15,7 +15,7 @@ type ProvisioningServiceMock struct {
 	RunInitProvisionersFunc         func() error
 	RunProvisionerFunc              func(provisionerUID string) error
 	GetProvisionerResolvedPathFunc  func(provisionerUID, name string) (string, error)
-	GetAllowUIUpdatesFromConfigFunc func(name string) bool
+	GetAllowUIUpdatesFromConfigFunc func(provisionerUID, name string) (bool, error)
 	RunFunc                         func(ctx context.Context) error
 }
 
@@ -49,12 +49,12 @@ func (mock *ProvisioningServiceMock) GetProvisionerResolvedPath(provisionerUID, 
 	return "", nil
 }
 
-func (mock *ProvisioningServiceMock) GetAllowUIUpdatesFromConfig(name string) bool {
+func (mock *ProvisioningServiceMock) GetAllowUIUpdatesFromConfig(provisionerUID, name string) (bool, error) {
 	mock.Calls.GetAllowUIUpdatesFromConfig = append(mock.Calls.GetAllowUIUpdatesFromConfig, name)
 	if mock.GetAllowUIUpdatesFromConfigFunc != nil {
-		return mock.GetAllowUIUpdatesFromConfigFunc(name)
+		return mock.GetAllowUIUpdatesFromConfigFunc(provisionerUID, name)
 	}
-	return false
+	return false, nil
 }
 
 func (mock *ProvisioningServiceMock) Run(ctx context.Context) error {
