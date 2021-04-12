@@ -6,10 +6,11 @@ import (
 
 	"github.com/grafana/grafana/pkg/api/response"
 	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/provisioning"
 )
 
 func (hs *HTTPServer) AdminProvisioningReloadDashboards(c *models.ReqContext) response.Response {
-	err := hs.ProvisioningService.ProvisionDashboards()
+	err := hs.ProvisioningService.RunProvisioner(provisioning.DashboardProvisionerUID)
 	if err != nil && !errors.Is(err, context.Canceled) {
 		return response.Error(500, "", err)
 	}
@@ -17,7 +18,7 @@ func (hs *HTTPServer) AdminProvisioningReloadDashboards(c *models.ReqContext) re
 }
 
 func (hs *HTTPServer) AdminProvisioningReloadDatasources(c *models.ReqContext) response.Response {
-	err := hs.ProvisioningService.ProvisionDatasources()
+	err := hs.ProvisioningService.RunProvisioner(provisioning.DatasourceProvisionerUID)
 	if err != nil {
 		return response.Error(500, "", err)
 	}
@@ -25,7 +26,7 @@ func (hs *HTTPServer) AdminProvisioningReloadDatasources(c *models.ReqContext) r
 }
 
 func (hs *HTTPServer) AdminProvisioningReloadPlugins(c *models.ReqContext) response.Response {
-	err := hs.ProvisioningService.ProvisionPlugins()
+	err := hs.ProvisioningService.RunProvisioner(provisioning.PluginsProvisionerUID)
 	if err != nil {
 		return response.Error(500, "Failed to reload plugins config", err)
 	}
@@ -33,7 +34,7 @@ func (hs *HTTPServer) AdminProvisioningReloadPlugins(c *models.ReqContext) respo
 }
 
 func (hs *HTTPServer) AdminProvisioningReloadNotifications(c *models.ReqContext) response.Response {
-	err := hs.ProvisioningService.ProvisionNotifications()
+	err := hs.ProvisioningService.RunProvisioner(provisioning.NotificationsProvisionerUID)
 	if err != nil {
 		return response.Error(500, "", err)
 	}

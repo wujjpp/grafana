@@ -18,13 +18,20 @@ import (
 )
 
 type ProvisioningService interface {
-	ProvisionDatasources() error
-	ProvisionPlugins() error
-	ProvisionNotifications() error
-	ProvisionDashboards() error
+	RunInitProvisioners() error
+	RunProvisioner(provisionerUID string) error
 	GetDashboardProvisionerResolvedPath(name string) string
 	GetAllowUIUpdatesFromConfig(name string) bool
+	registry.BackgroundService
 }
+
+// type ProvisioningService interface {
+//     RunInitProvisioners() error
+//     RunProvisioner(provisionerUID string) error
+//     GetProvisionerResolvedPath(provisionerUID, name string) string
+//     GetAllowUIUpdatesFromConfig(provisionerUID, name string) bool
+//     BackgroundService
+// }
 
 func init() {
 	registry.Register(&registry.Descriptor{
@@ -70,6 +77,10 @@ type provisioningServiceImpl struct {
 }
 
 func (ps *provisioningServiceImpl) Init() error {
+	return ps.RunInitProvisioners()
+}
+
+func (ps *provisioningServiceImpl) RunInitProvisioners() error {
 	err := ps.ProvisionDatasources()
 	if err != nil {
 		return err
@@ -114,6 +125,21 @@ func (ps *provisioningServiceImpl) Run(ctx context.Context) error {
 			ps.cancelPolling()
 			return ctx.Err()
 		}
+	}
+}
+
+func (ps *provisioningServiceImpl) RunProvisioner(provisionerUID string) error {
+	switch provisionerUID {
+	case DashboardProvisionerUID:
+		return ps.ProvisionDashboards()
+	case DatasourceProvisionerUID:
+		return ps.ProvisionDatasources()
+	case NotificationsProvisionerUID:
+		return ps.ProvisionNotifications()
+	case PluginsProvisionerUID:
+		return ps.ProvisionPlugins()
+	default:
+		return ErrUnknownProvisioner
 	}
 }
 
