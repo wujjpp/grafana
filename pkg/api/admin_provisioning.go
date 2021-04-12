@@ -10,7 +10,7 @@ import (
 )
 
 func (hs *HTTPServer) AdminProvisioningReloadDashboards(c *models.ReqContext) response.Response {
-	err := hs.ProvisioningService.RunProvisioner(provisioning.DashboardProvisionerUID)
+	err := hs.ProvisioningService.RunProvisioner(provisioning.DashboardsProvisionerUID)
 	if err != nil && !errors.Is(err, context.Canceled) {
 		return response.Error(500, "", err)
 	}
@@ -18,7 +18,7 @@ func (hs *HTTPServer) AdminProvisioningReloadDashboards(c *models.ReqContext) re
 }
 
 func (hs *HTTPServer) AdminProvisioningReloadDatasources(c *models.ReqContext) response.Response {
-	err := hs.ProvisioningService.RunProvisioner(provisioning.DatasourceProvisionerUID)
+	err := hs.ProvisioningService.RunProvisioner(provisioning.DatasourcesProvisionerUID)
 	if err != nil {
 		return response.Error(500, "", err)
 	}

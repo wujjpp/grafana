@@ -129,7 +129,7 @@ func (hs *HTTPServer) GetDashboard(c *models.ReqContext) response.Response {
 	}
 
 	if provisioningData != nil {
-		allowUIUpdate, err := hs.ProvisioningService.GetAllowUIUpdatesFromConfig(provisioning.DashboardProvisionerUID, provisioningData.Name)
+		allowUIUpdate, err := hs.ProvisioningService.GetAllowUIUpdatesFromConfig(provisioning.DashboardsProvisionerUID, provisioningData.Name)
 		if err != nil {
 			// This can never happen since we provide a known provisioner for sure: DashboardProvisionerUID
 			hs.log.Warn("Failed to get AllowUIUpdatesFromConfig bool", "err", err)
@@ -138,7 +138,7 @@ func (hs *HTTPServer) GetDashboard(c *models.ReqContext) response.Response {
 			meta.Provisioned = true
 		}
 
-		dashboardProvisionerResolvedPath, err := hs.ProvisioningService.GetProvisionerResolvedPath(provisioning.DashboardProvisionerUID, provisioningData.Name)
+		dashboardProvisionerResolvedPath, err := hs.ProvisioningService.GetProvisionerResolvedPath(provisioning.DashboardsProvisionerUID, provisioningData.Name)
 		if err != nil {
 			// This can never happen since we provide a known provisioner for sure: DashboardProvisionerUID
 			hs.log.Warn("Failed to get ProvisionerResolvedPath", "err", err)
@@ -281,7 +281,7 @@ func (hs *HTTPServer) PostDashboard(c *models.ReqContext, cmd models.SaveDashboa
 
 	allowUiUpdate := true
 	if provisioningData != nil {
-		allowUiUpdate, err = hs.ProvisioningService.GetAllowUIUpdatesFromConfig(provisioning.DashboardProvisionerUID, provisioningData.Name)
+		allowUiUpdate, err = hs.ProvisioningService.GetAllowUIUpdatesFromConfig(provisioning.DashboardsProvisionerUID, provisioningData.Name)
 		if err != nil {
 			// This can never happen since we provide a known provisioner for sure: DashboardProvisionerUID
 			hs.log.Warn("Failed to get AllowUIUpdatesFromConfig bool", "err", err)
