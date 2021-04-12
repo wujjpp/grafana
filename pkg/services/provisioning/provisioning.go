@@ -81,17 +81,17 @@ func (ps *provisioningServiceImpl) Init() error {
 }
 
 func (ps *provisioningServiceImpl) RunInitProvisioners() error {
-	err := ps.ProvisionDatasources()
+	err := ps.wrapProvisionDatasources()
 	if err != nil {
 		return err
 	}
 
-	err = ps.ProvisionPlugins()
+	err = ps.wrapProvisionPlugins()
 	if err != nil {
 		return err
 	}
 
-	err = ps.ProvisionNotifications()
+	err = ps.wrapProvisionNotifications()
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (ps *provisioningServiceImpl) RunInitProvisioners() error {
 }
 
 func (ps *provisioningServiceImpl) Run(ctx context.Context) error {
-	err := ps.ProvisionDashboards()
+	err := ps.wrapProvisionDashboards()
 	if err != nil {
 		ps.log.Error("Failed to provision dashboard", "error", err)
 		return err
@@ -131,37 +131,37 @@ func (ps *provisioningServiceImpl) Run(ctx context.Context) error {
 func (ps *provisioningServiceImpl) RunProvisioner(provisionerUID string) error {
 	switch provisionerUID {
 	case DashboardProvisionerUID:
-		return ps.ProvisionDashboards()
+		return ps.wrapProvisionDashboards()
 	case DatasourceProvisionerUID:
-		return ps.ProvisionDatasources()
+		return ps.wrapProvisionDatasources()
 	case NotificationsProvisionerUID:
-		return ps.ProvisionNotifications()
+		return ps.wrapProvisionNotifications()
 	case PluginsProvisionerUID:
-		return ps.ProvisionPlugins()
+		return ps.wrapProvisionPlugins()
 	default:
 		return ErrUnknownProvisioner
 	}
 }
 
-func (ps *provisioningServiceImpl) ProvisionDatasources() error {
+func (ps *provisioningServiceImpl) wrapProvisionDatasources() error {
 	datasourcePath := filepath.Join(ps.Cfg.ProvisioningPath, "datasources")
 	err := ps.provisionDatasources(datasourcePath)
 	return errutil.Wrap("Datasource provisioning error", err)
 }
 
-func (ps *provisioningServiceImpl) ProvisionPlugins() error {
+func (ps *provisioningServiceImpl) wrapProvisionPlugins() error {
 	appPath := filepath.Join(ps.Cfg.ProvisioningPath, "plugins")
 	err := ps.provisionPlugins(appPath, ps.PluginManager)
 	return errutil.Wrap("app provisioning error", err)
 }
 
-func (ps *provisioningServiceImpl) ProvisionNotifications() error {
+func (ps *provisioningServiceImpl) wrapProvisionNotifications() error {
 	alertNotificationsPath := filepath.Join(ps.Cfg.ProvisioningPath, "notifiers")
 	err := ps.provisionNotifiers(alertNotificationsPath)
 	return errutil.Wrap("Alert notification provisioning error", err)
 }
 
-func (ps *provisioningServiceImpl) ProvisionDashboards() error {
+func (ps *provisioningServiceImpl) wrapProvisionDashboards() error {
 	dashboardPath := filepath.Join(ps.Cfg.ProvisioningPath, "dashboards")
 	dashProvisioner, err := ps.newDashboardProvisioner(dashboardPath, ps.SQLStore, ps.RequestHandler)
 	if err != nil {
