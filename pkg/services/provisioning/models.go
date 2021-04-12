@@ -3,9 +3,9 @@ package provisioning
 import "errors"
 
 const (
-	DatasourceProvisionerUID    = "DatasourceProvisioner"
+	DatasourcesProvisionerUID   = "DatasourcesProvisioner"
 	PluginsProvisionerUID       = "PluginsProvisioner"
-	DashboardProvisionerUID     = "DashboardProvisioner"
+	DashboardsProvisionerUID    = "DashboardsProvisioner"
 	NotificationsProvisionerUID = "NotificationsProvisioner"
 )
 

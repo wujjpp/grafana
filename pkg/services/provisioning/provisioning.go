@@ -122,9 +122,9 @@ func (ps *provisioningServiceImpl) Run(ctx context.Context) error {
 
 func (ps *provisioningServiceImpl) RunProvisioner(provisionerUID string) error {
 	switch provisionerUID {
-	case DashboardProvisionerUID:
+	case DashboardsProvisionerUID:
 		return ps.wrapProvisionDashboards()
-	case DatasourceProvisionerUID:
+	case DatasourcesProvisionerUID:
 		return ps.wrapProvisionDatasources()
 	case NotificationsProvisionerUID:
 		return ps.wrapProvisionNotifications()
@@ -178,7 +178,7 @@ func (ps *provisioningServiceImpl) wrapProvisionDashboards() error {
 
 func (ps *provisioningServiceImpl) GetProvisionerResolvedPath(provisionerUID, name string) (string, error) {
 	switch provisionerUID {
-	case DashboardProvisionerUID:
+	case DashboardsProvisionerUID:
 		return ps.dashboardProvisioner.GetProvisionerResolvedPath(name), nil
 	default:
 		return "", ErrUnknownProvisioner
@@ -187,7 +187,7 @@ func (ps *provisioningServiceImpl) GetProvisionerResolvedPath(provisionerUID, na
 
 func (ps *provisioningServiceImpl) GetAllowUIUpdatesFromConfig(provisionerUID, name string) (bool, error) {
 	switch provisionerUID {
-	case DashboardProvisionerUID:
+	case DashboardsProvisionerUID:
 		return ps.dashboardProvisioner.GetAllowUIUpdatesFromConfig(name), nil
 	default:
 		return false, ErrUnknownProvisioner
