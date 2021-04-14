@@ -53,6 +53,8 @@ type (
 		View               string
 		EditorMode         string
 		Query              string
+		Preprocessor       string
+		PreprocessorType   preprocessorType
 	}
 
 	sloQuery struct {
