@@ -60,7 +60,7 @@ func (mock *ProvisioningServiceMock) GetAllowUIUpdatesFromConfig(provisionerUID,
 func (mock *ProvisioningServiceMock) Run(ctx context.Context) error {
 	mock.Calls.Run = append(mock.Calls.Run, ctx)
 	if mock.RunFunc != nil {
-		return mock.Run(ctx)
+		return mock.RunFunc(ctx)
 	}
 	return nil
 }
