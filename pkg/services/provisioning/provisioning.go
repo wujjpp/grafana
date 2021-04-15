@@ -17,14 +17,6 @@ import (
 	"github.com/grafana/grafana/pkg/util/errutil"
 )
 
-type ProvisioningService interface {
-	RunInitProvisioners() error
-	RunProvisioner(provisionerUID string) error
-	GetProvisionerResolvedPath(provisionerUID, name string) (string, error)
-	GetAllowUIUpdatesFromConfig(provisionerUID, name string) (bool, error)
-	registry.BackgroundService
-}
-
 func init() {
 	registry.Register(&registry.Descriptor{
 		Name:         "ProvisioningService",
