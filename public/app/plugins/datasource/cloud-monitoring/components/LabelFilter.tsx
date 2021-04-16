@@ -49,7 +49,8 @@ export const LabelFilter: FunctionComponent<Props> = ({
 
   const filtersToStringArray = useCallback((filters: Filter[]) => {
     const strArr = flatten(filters.map(({ key, operator, value, condition }) => [key, operator, value, condition!]));
-    return strArr.filter((_, i) => i !== strArr.length - 1);
+    // return strArr.filter((_, i) => i !== strArr.length - 1);
+    return strArr.slice(0, strArr.length - 1);
   }, []);
 
   return (
