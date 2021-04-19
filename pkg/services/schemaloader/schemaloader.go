@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/grafana/grafana"
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/infra/remotecache"
@@ -77,17 +76,17 @@ func (rs *SchemaLoaderService) DashboardTrimDefaults(input simplejson.Json) (sim
 	val, _ := input.Map()
 	val = removeNils(val)
 	data, _ := json.Marshal(val)
-	fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<", len(schema.AsArray(rs.DashFamily)))
+	fmt.Println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<here i am ", len(schema.AsArray(rs.DashFamily)))
 
 	dsSchema, err := schema.SearchAndValidate(rs.DashFamily, data)
 	if err != nil {
 		return input, err
 	}
-	spew.Dump(dsSchema)
-	// _, err = dsSchema.TrimDefaults(schema.Resource{Value: data})
-	// if err != nil {
-	// 	return input, err
-	// }
+	// spew.Dump(dsSchema)
+	_, err = dsSchema.TrimDefaults(schema.Resource{Value: data})
+	if err != nil {
+		return input, err
+	}
 
 	output, err := simplejson.NewJson(data)
 	if err != nil {

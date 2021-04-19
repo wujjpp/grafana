@@ -1,8 +1,6 @@
 package load
 
 import (
-	"fmt"
-
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/load"
 	"github.com/grafana/grafana/pkg/schema"
@@ -108,20 +106,44 @@ func (gvs *genericVersionedSchema) Validate(r schema.Resource) error {
 // ApplyDefaults returns a new, concrete copy of the Resource with all paths
 // that are 1) missing in the Resource AND 2) specified by the schema,
 // filled with default values specified by the schema.
-func (gvs *genericVersionedSchema) ApplyDefaults(_ schema.Resource) (schema.Resource, error) {
-	panic("not implemented") // TODO: Implement
+func (gvs *genericVersionedSchema) ApplyDefaults(r schema.Resource) (schema.Resource, error) {
+	rvInstance, err := rt.Compile("resource", r.Value)
+	if err != nil {
+		return r, err
+	}
+	rvUnified := rvInstance.Value().Unify(gvs.actual)
+	rv := schema.Resource{Value: rvUnified}
+	return rv, nil
 }
 
 // TrimDefaults returns a new, concrete copy of the Resource where all paths
 // in the  where the values at those paths are the same as the default value
 // given in the schema.
 func (gvs *genericVersionedSchema) TrimDefaults(r schema.Resource) (schema.Resource, error) {
-	fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>yoooooooooooo")
-	// rvInstance, err := rt.Compile("resource", r.Value)
-	// if err != nil {
-	// 	return r, err
-	// }
-	// rv := schema.Resource{Value: rvInstance.Value()}
+	rvInstance, err := rt.Compile("resource", r.Value)
+	if err != nil {
+		return r, err
+	}
+	rv, _, err := removeDefaultHelper(gvs.actual, rvInstance.Value())
+	if err != nil {
+		return r, err
+	}
+
+	return schema.Resource{Value: rv}, nil
+}
+
+func removeDefaultHelper(schema cue.Value, r cue.Value) (cue.Value, bool, error) {
+	var rv cue.Value
+	if schema.Kind() == cue.StructKind {
+		iter, err := r.Fields(cue.Definitions(true), cue.Optional(true))
+		if err != nil {
+			return rv, err
+		}
+		for iter.Next() {
+			g.decl(iter.Label(), iter.Value())
+		}
+
+	}
 	return r, nil
 }
 
