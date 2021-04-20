@@ -20,27 +20,20 @@ import (
 func init() {
 	registry.Register(&registry.Descriptor{
 		Name:         "ProvisioningService",
-		Instance:     NewProvisioningServiceImpl(nil, nil, nil),
+		Instance:     NewProvisioningServiceImpl(),
 		InitPriority: registry.Low,
 	})
 }
 
 // NewProvisioningServiceImpl creates a new instance of a ProvisioningService
 // Made public for Overriding Service to be able to create an instance
-func NewProvisioningServiceImpl(
-	cfg *setting.Cfg,
-	sqlStore *sqlstore.SQLStore,
-	pluginManager plugifaces.Manager,
-) *ProvisioningServiceImpl {
+func NewProvisioningServiceImpl() *ProvisioningServiceImpl {
 	return &ProvisioningServiceImpl{
 		log:                     log.New("provisioning"),
 		newDashboardProvisioner: dashboards.New,
 		provisionNotifiers:      notifiers.Provision,
 		provisionDatasources:    datasources.Provision,
 		provisionPlugins:        plugins.Provision,
-		Cfg:                     cfg,
-		SQLStore:                sqlStore,
-		PluginManager:           pluginManager,
 	}
 }
 
