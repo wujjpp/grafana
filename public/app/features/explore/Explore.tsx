@@ -328,9 +328,6 @@ export class Explore extends React.PureComponent<ExploreProps, ExploreState> {
       showNodeGraph,
       showLogsView,
     } = this.props;
-
-    console.log(this.props);
-
     const { openDrawer } = this.state;
     const styles = getStyles(theme);
     const showPanels = queryResponse && queryResponse.state !== LoadingState.NotStarted;
