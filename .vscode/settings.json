@@ -1,0 +1,15 @@
+{
+  "eslint.probe": ["html", "vue", "markdown"],
+  "eslint.codeAction.disableRuleComment": {
+    "enable": false
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

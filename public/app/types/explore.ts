@@ -156,6 +156,7 @@ export interface ExploreItemState {
   showTable?: boolean;
   showTrace?: boolean;
   showNodeGraph?: boolean;
+  showLogsView?: boolean; // 新增内容
 }
 
 export interface ExploreUpdateState {

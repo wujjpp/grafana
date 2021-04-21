@@ -82,6 +82,7 @@ const dummyProps: ExploreProps = {
   showTable: true,
   showTrace: true,
   showNodeGraph: true,
+  showLogsView: true, // 新增内容
   splitOpen: (() => {}) as any,
 };
 

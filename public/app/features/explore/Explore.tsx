@@ -18,6 +18,7 @@ import {
   TimeZone,
   LogsModel,
   DataFrame,
+  PreferredVisualisationType,
 } from '@grafana/data';
 
 import LogsContainer from './LogsContainer';
@@ -42,6 +43,7 @@ import { SecondaryActions } from './SecondaryActions';
 import { FILTER_FOR_OPERATOR, FILTER_OUT_OPERATOR, FilterItem } from '@grafana/ui/src/components/Table/types';
 import { ExploreGraphNGPanel } from './ExploreGraphNGPanel';
 import { NodeGraphContainer } from './NodeGraphContainer';
+import { LogsView } from './LogsView';
 
 const getStyles = stylesFactory((theme: GrafanaTheme) => {
   return {
@@ -95,6 +97,7 @@ export interface ExploreProps {
   showLogs: boolean;
   showTrace: boolean;
   showNodeGraph: boolean;
+  showLogsView: boolean;
   splitOpen: typeof splitOpen;
 }
 
@@ -296,6 +299,18 @@ export class Explore extends React.PureComponent<ExploreProps, ExploreState> {
     );
   }
 
+  renderLogsViewPanel() {
+    const { queryResponse, exploreId } = this.props;
+    const dataFrames = queryResponse.series.filter(
+      (series) => series.meta?.preferredVisualisationType === ('qcc-logs' as PreferredVisualisationType)
+    );
+
+    return (
+      // If there is no data (like 404) we show a separate error so no need to show anything here
+      dataFrames.length && <LogsView exploreId={exploreId} dataFrame={dataFrames[0]} />
+    );
+  }
+
   render() {
     const {
       datasourceInstance,
@@ -311,7 +326,11 @@ export class Explore extends React.PureComponent<ExploreProps, ExploreState> {
       showLogs,
       showTrace,
       showNodeGraph,
+      showLogsView,
     } = this.props;
+
+    console.log(this.props);
+
     const { openDrawer } = this.state;
     const styles = getStyles(theme);
     const showPanels = queryResponse && queryResponse.state !== LoadingState.NotStarted;
@@ -356,6 +375,7 @@ export class Explore extends React.PureComponent<ExploreProps, ExploreState> {
                     <ErrorBoundaryAlert>
                       {showPanels && (
                         <>
+                          {showLogsView && this.renderLogsViewPanel()}
                           {showMetrics && graphResult && this.renderGraphPanel(width)}
                           {showTable && this.renderTablePanel(width)}
                           {showLogs && this.renderLogsPanel(width)}
@@ -408,6 +428,7 @@ function mapStateToProps(state: StoreState, { exploreId }: ExploreProps): Partia
     absoluteRange,
     queryResponse,
     showNodeGraph,
+    showLogsView,
     loading,
   } = item;
 
@@ -427,6 +448,7 @@ function mapStateToProps(state: StoreState, { exploreId }: ExploreProps): Partia
     showTable,
     showTrace,
     showNodeGraph,
+    showLogsView,
     loading,
   };
 }

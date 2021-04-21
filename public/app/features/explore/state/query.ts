@@ -9,6 +9,7 @@ import {
   PanelEvents,
   QueryFixAction,
   toLegacyResponseData,
+  PreferredVisualisationType, // -- 新增内容
 } from '@grafana/data';
 
 import {
@@ -677,6 +678,11 @@ export const processQueryResponse = (
     state.eventBridge.emit(PanelEvents.dataReceived, legacy);
   }
 
+  // 新增showLogsView变量
+  const showLogsView = !!series.filter(
+    (series) => series.meta?.preferredVisualisationType === ('qcc-logs' as PreferredVisualisationType)
+  );
+
   return {
     ...state,
     latency,
@@ -687,8 +693,9 @@ export const processQueryResponse = (
     loading: loadingState === LoadingState.Loading || loadingState === LoadingState.Streaming,
     showLogs: !!logsResult,
     showMetrics: !!graphResult,
-    showTable: !!tableResult,
+    showTable: !!tableResult && !showLogsView, // 修改内容
     showTrace: !!traceFrames.length,
     showNodeGraph: !!nodeGraphFrames.length,
+    showLogsView, // 新增内容
   };
 };

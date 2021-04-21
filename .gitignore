@@ -48,7 +48,6 @@ public/css/*.min.css
 *.iml
 *.tmp
 .DS_Store
-.vscode/
 .vs/
 .eslintcache
 
