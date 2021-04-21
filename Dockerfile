@@ -1,20 +1,12 @@
-FROM node:14.15.5-alpine3.13 as js-builder
+FROM node:14.16.0-alpine3.13 as js-builder
 
 WORKDIR /usr/src/app/
-
-RUN cp /etc/apk/repositories /etc/apk/repositories.bak \
-  && echo "http://mirrors.aliyun.com/alpine/v$(cat /etc/alpine-release | cut -d "." -f 1,2)/main/" > /etc/apk/repositories \
-  && echo "http://mirrors.aliyun.com/alpine/v$(cat /etc/alpine-release | cut -d "." -f 1,2)/community/" >> /etc/apk/repositories
-
-RUN apk add -U --no-cache git
-
-RUN npm config set registry=http://npm.greatld.com:4873/ \
-  && yarn config set registry=http://npm.greatld.com:4873/
 
 COPY package.json yarn.lock ./
 COPY packages packages
 
-RUN yarn install --pure-lockfile
+RUN apk --no-cache add git
+RUN yarn install --pure-lockfile --no-progress
 
 COPY tsconfig.json .eslintrc .editorconfig .browserslistrc .prettierrc.js ./
 COPY public public
@@ -27,11 +19,7 @@ RUN yarn build
 
 FROM golang:1.16.1-alpine3.13 as go-builder
 
-RUN cp /etc/apk/repositories /etc/apk/repositories.bak \
-  && echo "http://mirrors.aliyun.com/alpine/v$(cat /etc/alpine-release | cut -d "." -f 1,2)/main/" > /etc/apk/repositories \
-  && echo "http://mirrors.aliyun.com/alpine/v$(cat /etc/alpine-release | cut -d "." -f 1,2)/community/" >> /etc/apk/repositories
-
-RUN apk add -U --no-cache gcc g++
+RUN apk add --no-cache gcc g++
 
 WORKDIR $GOPATH/src/github.com/grafana/grafana
 
@@ -62,12 +50,8 @@ ENV PATH="/usr/share/grafana/bin:$PATH" \
 
 WORKDIR $GF_PATHS_HOME
 
-RUN cp /etc/apk/repositories /etc/apk/repositories.bak \
-  && echo "http://mirrors.aliyun.com/alpine/v$(cat /etc/alpine-release | cut -d "." -f 1,2)/main/" > /etc/apk/repositories \
-  && echo "http://mirrors.aliyun.com/alpine/v$(cat /etc/alpine-release | cut -d "." -f 1,2)/community/" >> /etc/apk/repositories
-
-RUN apk add -U --no-cache ca-certificates bash tzdata && \
-    apk add -U --no-cache openssl musl-utils
+RUN apk add --no-cache ca-certificates bash tzdata && \
+    apk add --no-cache openssl musl-utils
 
 COPY conf ./conf
 
