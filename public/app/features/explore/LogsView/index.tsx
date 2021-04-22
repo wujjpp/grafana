@@ -5,7 +5,7 @@
 import React, { Component } from 'react';
 import { dateTimeParse } from '@grafana/data';
 import { css, cx } from 'emotion';
-import { stylesFactory, CustomScrollbar, Icon, IconName } from '@grafana/ui';
+import { stylesFactory, Icon, IconName } from '@grafana/ui';
 import _ from 'lodash';
 import statusBar from './views/StatusBar';
 import DetailView from './views/DetailView';
@@ -109,37 +109,35 @@ export class LogsView extends Component<Props, State> {
     }
     return (
       <div className={cx(this.styles.container, css``)}>
-        <CustomScrollbar>
-          <table className={this.styles.table}>
-            <thead>
-              {
-                <tr>
-                  <th className={this.styles.timeCell}>日志时间</th>
-                  <th>日志数据</th>
+        <table className={this.styles.table}>
+          <thead>
+            {
+              <tr>
+                <th className={this.styles.timeCell}>日志时间</th>
+                <th>日志数据</th>
+              </tr>
+            }
+          </thead>
+          <tbody>
+            {values.map((v, i) => (
+              <React.Fragment key={`${v['time']}-${i}`}>
+                <tr onClick={this.toggle.bind(this, i)} title="点击展开或收起" style={{ cursor: 'pointer' }}>
+                  <td className={this.styles.timeCell}>
+                    <Icon name={this.getIconName(i)}></Icon>
+                    {dateTimeParse(+v['time']).format('YYYY-MM-DD HH:mm:ss.SSS')}
+                    {statusBar(v['level'])}
+                  </td>
+                  <td>
+                    <div className={this.styles.logSummary}>
+                      {summaryView({ data: v, filters: this.state.filters })}
+                    </div>
+                  </td>
                 </tr>
-              }
-            </thead>
-            <tbody>
-              {values.map((v, i) => (
-                <React.Fragment key={`${v['time']}-${i}`}>
-                  <tr onClick={this.toggle.bind(this, i)} title="点击展开或收起" style={{ cursor: 'pointer' }}>
-                    <td className={this.styles.timeCell}>
-                      <Icon name={this.getIconName(i)}></Icon>
-                      {dateTimeParse(+v['time']).format('YYYY-MM-DD HH:mm:ss.SSS')}
-                      {statusBar(v['level'])}
-                    </td>
-                    <td>
-                      <div className={this.styles.logSummary}>
-                        {summaryView({ data: v, filters: this.state.filters })}
-                      </div>
-                    </td>
-                  </tr>
-                  {this.renderDetailView(i, v, values)}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </CustomScrollbar>
+                {this.renderDetailView(i, v, values)}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   }
