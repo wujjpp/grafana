@@ -193,6 +193,7 @@ const getStyles = stylesFactory(() => {
       user-select: none;
       position: relative;
       text-align: center;
+      width: 40px;
     `,
 
     timeCell: css`
