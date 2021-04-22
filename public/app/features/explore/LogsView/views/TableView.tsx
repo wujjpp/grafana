@@ -9,6 +9,7 @@ import { stylesFactory, Icon } from '@grafana/ui';
 import { css } from 'emotion';
 import fieldMeta from '../fieldMeta';
 import StatsBar from './StatsBar';
+import FieldView from './FieldView';
 
 const styles = stylesFactory(() => {
   return {
@@ -57,15 +58,6 @@ const styles = stylesFactory(() => {
     `,
   };
 })();
-
-// 格式化内容，遇到"回车"换成<br />
-const formatField = (entity: any, key: string) => {
-  let v = entity[key];
-  if (_.isString(v) && v.indexOf('\n') !== 0) {
-    v = v.replace(/\n/gi, '<br />');
-  }
-  return v;
-};
 
 // 获取栏位样式
 const getFieldClassName = (key: string) => {
@@ -120,7 +112,8 @@ export default class TableView extends React.Component<Props, Record<string, boo
               {this.state[key] ? (
                 <td className={styles.td}>{StatsBar({ fieldName: key, allItems: allItems })}</td>
               ) : (
-                <td className={styles.td} dangerouslySetInnerHTML={{ __html: formatField(flattenEntity, key) }}></td>
+                <FieldView value={flattenEntity[key]}></FieldView>
+                // <td className={styles.td} dangerouslySetInnerHTML={{ __html: formatField(flattenEntity, key) }}></td>
               )}
             </tr>
           ))}
@@ -129,5 +122,3 @@ export default class TableView extends React.Component<Props, Record<string, boo
     );
   }
 }
-
-// category: 100 of 100 rows have that field

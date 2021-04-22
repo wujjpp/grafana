@@ -113,6 +113,7 @@ export class LogsView extends Component<Props, State> {
           <thead>
             {
               <tr>
+                <th className={this.styles.snCell}>#</th>
                 <th className={this.styles.timeCell}>日志时间</th>
                 <th>日志数据</th>
               </tr>
@@ -122,10 +123,13 @@ export class LogsView extends Component<Props, State> {
             {values.map((v, i) => (
               <React.Fragment key={`${v['time']}-${i}`}>
                 <tr onClick={this.toggle.bind(this, i)} title="点击展开或收起" style={{ cursor: 'pointer' }}>
+                  <td className={this.styles.snCell}>
+                    {i + 1}
+                    {statusBar(v['level'])}
+                  </td>
                   <td className={this.styles.timeCell}>
                     <Icon name={this.getIconName(i)}></Icon>
                     {dateTimeParse(+v['time']).format('YYYY-MM-DD HH:mm:ss.SSS')}
-                    {statusBar(v['level'])}
                   </td>
                   <td>
                     <div className={this.styles.logSummary}>
@@ -183,6 +187,12 @@ const getStyles = stylesFactory(() => {
       :hover {
         background-color: rgb(20, 22, 25) !important;
       }
+    `,
+
+    snCell: css`
+      user-select: none;
+      position: relative;
+      text-align: center;
     `,
 
     timeCell: css`
