@@ -43,7 +43,7 @@ import { SecondaryActions } from './SecondaryActions';
 import { FILTER_FOR_OPERATOR, FILTER_OUT_OPERATOR, FilterItem } from '@grafana/ui/src/components/Table/types';
 import { ExploreGraphNGPanel } from './ExploreGraphNGPanel';
 import { NodeGraphContainer } from './NodeGraphContainer';
-import { LogsView } from './LogsView';
+import LogsView from './LogsView';
 
 const getStyles = stylesFactory((theme: GrafanaTheme) => {
   return {
@@ -299,15 +299,24 @@ export class Explore extends React.PureComponent<ExploreProps, ExploreState> {
     );
   }
 
-  renderLogsViewPanel() {
-    const { queryResponse, exploreId } = this.props;
+  renderLogsViewPanel(width: number) {
+    const { queryResponse, exploreId, absoluteRange, datasourceInstance } = this.props;
     const dataFrames = queryResponse.series.filter(
       (series) => series.meta?.preferredVisualisationType === ('qcc-logs' as PreferredVisualisationType)
     );
 
     return (
       // If there is no data (like 404) we show a separate error so no need to show anything here
-      dataFrames.length && <LogsView exploreId={exploreId} dataFrame={dataFrames[0]} />
+      dataFrames.length && (
+        <LogsView
+          exploreId={exploreId}
+          dataSourceId={datasourceInstance?.id}
+          width={width}
+          dataFrame={dataFrames[0]}
+          absoluteRange={absoluteRange}
+          updateTimeRange={this.onUpdateTimeRange}
+        />
+      )
     );
   }
 
@@ -372,7 +381,7 @@ export class Explore extends React.PureComponent<ExploreProps, ExploreState> {
                     <ErrorBoundaryAlert>
                       {showPanels && (
                         <>
-                          {showLogsView && this.renderLogsViewPanel()}
+                          {showLogsView && this.renderLogsViewPanel(width)}
                           {showMetrics && graphResult && this.renderGraphPanel(width)}
                           {showTable && this.renderTablePanel(width)}
                           {showLogs && this.renderLogsPanel(width)}
