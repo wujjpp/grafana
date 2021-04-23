@@ -165,9 +165,10 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     });
 
     const graphSeriesXY: GraphSeriesXY = {
+      color: '#33a2e5',
       data: [],
       isVisible: true,
-      label: '',
+      label: '日志量',
       yAxis: {
         index: 0,
         tickDecimals: 0,
@@ -221,9 +222,13 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
         <div className={this.styles.graphContainer}>
           <Graph
             timeRange={timeRange}
-            height={100}
+            height={120}
             width={width}
             series={[graphSeriesXY]}
+            showLines={true}
+            isStacked={true}
+            lineWidth={1}
+            showPoints={true}
             onHorizontalRegionSelected={this.timeRangeChanged.bind(this)}
           ></Graph>
         </div>
