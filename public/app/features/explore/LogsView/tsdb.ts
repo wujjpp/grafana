@@ -68,7 +68,7 @@ class TSDB {
 
       const histograms = _.map(results[0], (o) => {
         return {
-          time: Math.floor((+o.from + +o.to) / 2),
+          time: +o.to,
           count: +o.count,
         };
       });
