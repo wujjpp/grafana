@@ -61,6 +61,7 @@ const fields: Record<string, string> = {
   'fields.requestContext.currentNodeName': '当前应用所在节点名称（运维注入）',
   'fields.requestContext.deviceId': '设备ID，对于Web类应用该栏位为SessionID',
   'fields.requestContext.deviceType': '设备类型',
+  'fields.requestContext.functionName': '功能名称',
   'fields.requestContext.headers': '当前请求headers',
   'fields.requestContext.hop': '请求链层级',
   'fields.requestContext.isSvip': '当前用户是否为SVIP',
