@@ -43,7 +43,7 @@ const styles = stylesFactory(() => {
     `,
 
     iconCellActive: css`
-      color: rgb(51, 162, 229);
+      color: rgb(51, 162, 229) !important;
       :hover {
         color: rgb(51, 162, 229) !important;
       }
