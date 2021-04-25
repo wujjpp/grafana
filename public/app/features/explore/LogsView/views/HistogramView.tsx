@@ -85,7 +85,7 @@ const HistogramView = (props: Props): JSX.Element => {
       height={height}
       width={width}
       series={[graphSeriesXY]}
-      showLines={true}
+      showLines={false}
       isStacked={false}
       lineWidth={1}
       showBars={true}

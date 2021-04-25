@@ -106,9 +106,9 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
   }
 
   // Graph上选择时间区域
-  timeRangeChanged(from: number, to: number) {
+  timeRangeChanged(absoluteRange: AbsoluteTimeRange) {
     const { updateTimeRange } = this.props;
-    updateTimeRange({ from, to });
+    updateTimeRange(absoluteRange);
   }
 
   loadHistograms() {
@@ -133,7 +133,6 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
   render() {
     const { dataFrame, absoluteRange, width } = this.props;
 
-    // 用来兼容
     if (this.prevTimeRangeFrom !== absoluteRange.from || this.prevTimeRangeTo !== absoluteRange.to) {
       this.prevTimeRangeFrom = absoluteRange.from;
       this.prevTimeRangeTo = absoluteRange.to;
