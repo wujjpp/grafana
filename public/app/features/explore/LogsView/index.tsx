@@ -228,6 +228,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
             showLines={true}
             isStacked={true}
             lineWidth={1}
+            showBars={false}
             showPoints={true}
             onHorizontalRegionSelected={this.timeRangeChanged.bind(this)}
           ></Graph>
