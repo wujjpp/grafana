@@ -119,7 +119,6 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
       tsdb
         .getHistograms(dataSourceId, absoluteRange.from, absoluteRange.to, queryText)
         .then((data) => {
-          console.log(data);
           let state = { ...this.state, histograms: data.histograms, timeStep: data.timeStep };
           this.histogramsStatus = HistogramsState.finished;
           this.setState(state);
