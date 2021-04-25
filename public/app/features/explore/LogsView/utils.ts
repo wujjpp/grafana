@@ -1,7 +1,9 @@
 /**
  * Created by Wu Jian Ping on - 2021/04/15.
  */
+
 import _ from 'lodash';
+import { parse } from 'flatted';
 
 const flattenObject = (source: Record<string, any>, target: any = {}, fullPath = ''): Record<string, any> => {
   const keys = _.keys(source);
@@ -21,6 +23,18 @@ const flattenObject = (source: Record<string, any>, target: any = {}, fullPath =
   return target;
 };
 
+const stringToJson = (str: string): any => {
+  try {
+    return parse(str);
+  } catch {
+    try {
+      return JSON.parse(str);
+    } catch {}
+  }
+  throw new Error('Cannot convert string to json');
+};
+
 export default {
   flattenObject,
+  stringToJson,
 };

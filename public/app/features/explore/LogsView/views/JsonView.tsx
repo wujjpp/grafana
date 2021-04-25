@@ -2,10 +2,6 @@
  * Created by Wu Jian Ping on - 2021/04/16.
  */
 
-/**
- * Created by Wu Jian Ping on - 2021/04/22.
- */
-
 import _ from 'lodash';
 import HighlightView, { Languages } from './HighlightView';
 

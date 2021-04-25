@@ -7,6 +7,7 @@ import { Icon, stylesFactory } from '@grafana/ui';
 import { css } from 'emotion';
 import _ from 'lodash';
 import HighlightView, { Languages } from './HighlightView';
+import utils from '../utils';
 
 const styles = stylesFactory(() => {
   return {
@@ -64,7 +65,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
   toggle(value: any) {
     if (!this.state.isInJsonMode) {
       try {
-        JSON.parse(value);
+        utils.stringToJson(value);
         this.setState({ ...this.state, isInJsonMode: true });
       } catch {}
     } else {
@@ -93,7 +94,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
           <></>
         )}
         {this.state.isInJsonMode ? (
-          <div>{HighlightView({ entity: JSON.parse(value), language: Languages.json })}</div>
+          <div>{HighlightView({ entity: utils.stringToJson(value), language: Languages.json })}</div>
         ) : (
           <div dangerouslySetInnerHTML={{ __html: this.formatField(value) }}></div>
         )}
