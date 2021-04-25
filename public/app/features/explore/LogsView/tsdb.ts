@@ -63,8 +63,9 @@ class TSDB {
     requestData.To = moment(to).valueOf().toString();
 
     const results = await this.query(requestData);
+
     if (results.length > 0) {
-      let timeStep = 1000;
+      let timeStep = 1;
 
       const histograms = _.map(results[0], (o) => {
         return {
@@ -74,8 +75,8 @@ class TSDB {
       });
 
       // 从第二个数据点计算timestep
-      if (results.length >= 3) {
-        timeStep = +results[1].to - +results[1].from;
+      if (results.length > 0 && results[0].length >= 3) {
+        timeStep = +results[0][1].to - +results[0][1].from;
       }
 
       return {
@@ -84,7 +85,7 @@ class TSDB {
       };
     }
 
-    return { histograms: [], timeStep: 1000 };
+    return { histograms: [], timeStep: 1 };
   }
 }
 

@@ -3,18 +3,9 @@
  */
 
 import React, { Component } from 'react';
-import {
-  dateTimeParse,
-  dateTime,
-  TimeRange,
-  AbsoluteTimeRange,
-  GraphSeriesXY,
-  MutableDataFrame,
-  FieldType,
-  Field,
-} from '@grafana/data';
+import { dateTimeParse, AbsoluteTimeRange } from '@grafana/data';
 import { css } from 'emotion';
-import { stylesFactory, Icon, IconName, Graph } from '@grafana/ui';
+import { stylesFactory, Icon, IconName } from '@grafana/ui';
 import _ from 'lodash';
 import statusBar from './views/StatusBar';
 import DetailView from './views/DetailView';
@@ -24,6 +15,7 @@ import tsdb from './tsdb';
 import { hot } from 'react-hot-loader';
 import { connect, ConnectedProps } from 'react-redux';
 import { StoreState } from 'app/types';
+import HistogramView from './views/HistogramView';
 
 interface Props {
   exploreId: ExploreId;
@@ -52,7 +44,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     expand: {},
     filters: [],
     histograms: [],
-    timeStep: 1000,
+    timeStep: 1,
   };
 
   histogramsStatus = HistogramsState.outdated;
@@ -127,6 +119,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
       tsdb
         .getHistograms(dataSourceId, absoluteRange.from, absoluteRange.to, queryText)
         .then((data) => {
+          console.log(data);
           let state = { ...this.state, histograms: data.histograms, timeStep: data.timeStep };
           this.histogramsStatus = HistogramsState.finished;
           this.setState(state);
@@ -149,50 +142,6 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     }
 
     this.loadHistograms();
-
-    // 处理Histograms
-    const frame = new MutableDataFrame({
-      fields: [
-        {
-          name: 'time',
-          type: FieldType.time,
-        },
-        {
-          name: 'count',
-          type: FieldType.number,
-        },
-      ],
-    });
-
-    const graphSeriesXY: GraphSeriesXY = {
-      color: '#33a2e5',
-      data: [],
-      isVisible: true,
-      label: '日志量',
-      yAxis: {
-        index: 0,
-        tickDecimals: 0,
-      },
-      timeField: frame.fields.find((o) => o.name === 'time') as Field,
-      valueField: frame.fields.find((o) => o.name === 'count') as Field,
-      seriesIndex: 0,
-      timeStep: 1,
-    };
-
-    _.forEach(this.state.histograms, (o) => {
-      graphSeriesXY.data.push([o.time, o.count]);
-      frame.add({ time: o.time, count: o.count });
-    });
-
-    // 处理Graph所需的TimeRange
-    const timeRange: TimeRange = {
-      from: dateTime(absoluteRange.from),
-      to: dateTime(absoluteRange.to),
-      raw: {
-        from: dateTime(absoluteRange.from),
-        to: dateTime(absoluteRange.to),
-      },
-    };
 
     // 处理表格需要的数据
     let values: any[] = [];
@@ -220,18 +169,14 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
       <div className={this.styles.container}>
         {/* Graph区域 */}
         <div className={this.styles.graphContainer}>
-          <Graph
-            timeRange={timeRange}
+          <HistogramView
+            absoluteTimeRange={absoluteRange}
             height={120}
             width={width}
-            series={[graphSeriesXY]}
-            showLines={true}
-            isStacked={true}
-            lineWidth={1}
-            showBars={false}
-            showPoints={true}
-            onHorizontalRegionSelected={this.timeRangeChanged.bind(this)}
-          ></Graph>
+            histograms={this.state.histograms}
+            timeStep={this.state.timeStep}
+            onTimeRangeChanged={this.timeRangeChanged.bind(this)}
+          ></HistogramView>
         </div>
         {/* 表格区域 */}
         <table className={this.styles.table}>
