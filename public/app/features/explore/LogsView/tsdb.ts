@@ -87,6 +87,50 @@ class TSDB {
 
     return { histograms: [], timeStep: 1 };
   }
+
+  async getDistributionByFieldName(
+    dataSourceId: number,
+    queryText: string,
+    fieldName: string,
+    from: number,
+    to: number
+  ): Promise<Array<{ label: string; count: number }>> {
+    let query = queryText;
+    if (queryText.indexOf('|') !== -1) {
+      query = query.substring(0, queryText.indexOf('|'));
+    }
+
+    query = `${query} | select "${fieldName}" as label, count(1) as count group by label`;
+
+    const requestData: any = {
+      Queries: [
+        {
+          queryType: 'query',
+          target: 'query',
+          refId: 'A',
+          datasourceId: dataSourceId,
+          queryText: query,
+          hide: false,
+        },
+      ],
+    };
+
+    requestData.From = moment(from).valueOf().toString();
+    requestData.To = moment(to).valueOf().toString();
+
+    const list = await this.query(requestData);
+
+    if (_.isArray(list) && list.length > 0) {
+      return _.map(list[0], (o: any) => {
+        return {
+          label: o.label,
+          count: +o.count,
+        };
+      });
+    }
+
+    return [];
+  }
 }
 
 export default new TSDB();

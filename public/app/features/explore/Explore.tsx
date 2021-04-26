@@ -310,7 +310,7 @@ export class Explore extends React.PureComponent<ExploreProps, ExploreState> {
       dataFrames.length && (
         <LogsView
           exploreId={exploreId}
-          dataSourceId={datasourceInstance?.id}
+          dataSourceId={datasourceInstance?.id || -1}
           width={width}
           dataFrame={dataFrames[0]}
           absoluteRange={absoluteRange}

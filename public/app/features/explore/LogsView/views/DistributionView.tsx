@@ -6,7 +6,6 @@ import React from 'react';
 import _ from 'lodash';
 import { stylesFactory } from '@grafana/ui';
 import { css } from 'emotion';
-import utils from '../utils';
 
 const styles = stylesFactory(() => {
   return {
@@ -65,53 +64,28 @@ const styles = stylesFactory(() => {
 })();
 
 interface Props {
-  fieldName: string;
-  allItems: any[];
+  items: Array<{ label: string; count: number }>;
 }
 
-// { title: `${key}: 100 of 100 rows have that field`, items: [] }
+const DistributionView = (props: Props): JSX.Element => {
+  let { items } = props;
 
-const StatsBar = (props: Props): JSX.Element => {
-  let { fieldName, allItems } = props;
-  // 这边只有点了signal按钮之后才会渲染，因此不考虑前端性能问题
-
-  // 展平数据
-  const flattenItems = _.map(allItems, (o) => utils.flattenObject(o));
-  // 记录条数
-  const totalRecord = flattenItems.length;
-  // 包含对应属性的记录条数
-  let matchedCount = 0;
-
-  const agg: Record<string, number> = {};
-
-  _.forEach(flattenItems, (o) => {
-    let val = o[fieldName];
-    if (!_.isUndefined(val)) {
-      matchedCount += 1;
-      if (agg[val]) {
-        agg[val] = agg[val] + 1;
-      } else {
-        agg[val] = 1;
-      }
-    }
-  });
-
-  const items: any[] = _.chain(agg)
-    .keys()
-    .map((key) => {
-      return {
-        label: key,
-        count: agg[key],
-      };
-    })
-    .value();
+  let totalRecords = _.reduce(items, (total, o) => (total += o.count), 0);
+  let notNullCount = totalRecords;
+  let nullCount = 0;
+  let nullItem = _.find(items, (o) => o.label === 'null');
+  if (nullItem) {
+    nullCount = +nullItem.count || 0;
+    notNullCount = totalRecords - nullCount;
+  }
 
   let list: any[] = _.chain(items)
+    .filter((o) => o.label !== 'null')
     .map((o) => {
       return {
         label: o.label,
         count: o.count,
-        percent: (o.count * 100) / (matchedCount * 1.0),
+        percent: (o.count * 100) / (notNullCount * 1.0),
       };
     })
     .orderBy(['count'], ['desc'])
@@ -119,7 +93,7 @@ const StatsBar = (props: Props): JSX.Element => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>{`${matchedCount} of ${totalRecord} rows have that field`}</div>
+      <div className={styles.header}>{`${notNullCount} of ${totalRecords} rows have that field`}</div>
       <div className={styles.body}>
         {_.map(list, (o) => (
           <div className={styles.statsRow} key={`${o.label}-${o.count}`}>
@@ -138,6 +112,6 @@ const StatsBar = (props: Props): JSX.Element => {
   );
 };
 
-StatsBar.displayName = 'StatsBar';
+DistributionView.displayName = 'DistributionView';
 
-export default StatsBar;
+export default DistributionView;

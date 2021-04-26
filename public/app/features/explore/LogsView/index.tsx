@@ -19,7 +19,7 @@ import HistogramView from './views/HistogramView';
 
 interface Props {
   exploreId: ExploreId;
-  dataSourceId?: number;
+  dataSourceId: number;
   width: number;
   dataFrame: any;
   updateTimeRange: (absoluteRange: AbsoluteTimeRange) => void;
@@ -75,7 +75,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
   }
 
   // 渲染详情视图
-  renderDetailView(i: number, data: any, allItems: any[]): JSX.Element {
+  renderDetailView(i: number, data: any): JSX.Element {
     let isExpand = this.state.expand[this.getKey(i)];
     if (isExpand) {
       return (
@@ -85,8 +85,10 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
               index={i}
               isExpand={isExpand}
               data={data}
-              allItems={allItems}
               filters={this.state.filters}
+              dataSourceId={this.props.dataSourceId}
+              queryText={this.props.queryText}
+              absoluteTimeRange={this.props.absoluteRange}
               onToggleFilter={this.toggleFilter.bind(this)}
             ></DetailView>
           </td>
@@ -205,7 +207,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
                     </div>
                   </td>
                 </tr>
-                {this.renderDetailView(i, v, values)}
+                {this.renderDetailView(i, v)}
               </React.Fragment>
             ))}
           </tbody>

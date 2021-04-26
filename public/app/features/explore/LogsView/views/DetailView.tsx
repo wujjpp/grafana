@@ -7,14 +7,17 @@ import TableView from './TableView';
 import jsonView from './JsonView';
 import { css } from 'emotion';
 import { stylesFactory } from '@grafana/ui';
+import { AbsoluteTimeRange } from '@grafana/data';
 // import statusBar from './StatusBar';
 
 interface Props {
   index: number;
   isExpand: boolean;
   data: any;
-  allItems: any[];
   filters: string[];
+  dataSourceId: number;
+  queryText: string;
+  absoluteTimeRange: AbsoluteTimeRange;
   onToggleFilter: (fieldName: string) => void;
 }
 
@@ -37,7 +40,7 @@ export default class DetailView extends PureComponent<Props> {
   }
 
   render() {
-    const { isExpand, data, filters, allItems, onToggleFilter } = this.props;
+    const { isExpand, data, filters, onToggleFilter, dataSourceId } = this.props;
     return isExpand ? (
       <div className={this.styles.container}>
         {/* {statusBar(data['level'])} */}
@@ -59,7 +62,14 @@ export default class DetailView extends PureComponent<Props> {
           {this.state.viewMode === ViewMode.JSON ? (
             jsonView({ entity: data, filters })
           ) : (
-            <TableView entity={data} filters={filters} onToggleFilter={onToggleFilter} allItems={allItems}></TableView>
+            <TableView
+              entity={data}
+              filters={filters}
+              onToggleFilter={onToggleFilter}
+              dataSourcedId={dataSourceId}
+              queryText={this.props.queryText}
+              absoluteTimeRange={this.props.absoluteTimeRange}
+            ></TableView>
           )}
         </div>
       </div>
