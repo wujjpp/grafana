@@ -120,11 +120,10 @@ export default class TableView extends React.Component<Props, State> {
         .finally(() => {
           fieldState.loading = false;
         });
-    } else {
-      const obj: any = {};
-      obj[key] = fieldState;
-      this.setState({ ...this.state, ...obj });
     }
+    const obj: any = {};
+    obj[key] = fieldState;
+    this.setState({ ...this.state, ...obj });
   }
 
   render() {
