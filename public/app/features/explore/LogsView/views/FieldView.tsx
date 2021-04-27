@@ -34,6 +34,9 @@ const styles = stylesFactory(() => {
     iconContainer: css`
       padding-left: 6px;
       display: inline-block;
+      :hover {
+        color: rgb(51, 162, 229);
+      }
     `,
   };
 })();
@@ -45,25 +48,27 @@ interface Props {
 }
 
 interface State {
-  showToolbar: boolean;
   isInJsonMode: boolean;
 }
 
 export default class FieldView extends React.PureComponent<Props, State> {
   state: State = {
-    showToolbar: false,
     isInJsonMode: false,
   };
 
   // 格式化内容，遇到"回车"换成<br />
-  formatField(v: string) {
+  formatField(v: any) {
     // 处理换行
     if (_.isString(v) && v.indexOf('\n') !== 0) {
       v = v.replace(/\n/gi, '<br />');
     }
 
+    if (!_.isString(v) && v !== undefined) {
+      v = v.toString();
+    }
+
     // 处理高亮
-    if (_.isString(v) && this.props.valueFilters.length > 0) {
+    if (this.props.valueFilters.length > 0) {
       const matches = _.map(this.props.valueFilters, (key) => {
         return {
           regexp: new RegExp(`${key}`, 'ig'),
@@ -90,14 +95,6 @@ export default class FieldView extends React.PureComponent<Props, State> {
     }
   }
 
-  mouseEnter() {
-    this.setState({ ...this.state, showToolbar: true });
-  }
-
-  mouseLeave() {
-    this.setState({ ...this.state, showToolbar: false });
-  }
-
   changeSearchFilter(value: any, event: any) {
     const { onChangeValueSearchFilter } = this.props;
     if (onChangeValueSearchFilter) {
@@ -105,32 +102,34 @@ export default class FieldView extends React.PureComponent<Props, State> {
     }
   }
 
-  shouldHighlight(value: string): any {
+  shouldHighlight(value: any): any {
     const { valueFilters } = this.props;
-    return _.some(valueFilters, (v) => value.indexOf(v) !== -1);
+    let tmp = '';
+    if (_.isString(value)) {
+      tmp = value;
+    } else if (!_.isUndefined(tmp)) {
+      tmp = value.toString();
+    }
+    return _.some(valueFilters, (v) => tmp.indexOf(v) !== -1);
   }
 
   render() {
     const { value } = this.props;
 
     return (
-      <td className={styles.td} onMouseEnter={this.mouseEnter.bind(this)} onMouseLeave={this.mouseLeave.bind(this)}>
-        {this.state.showToolbar ? (
-          <div className={styles.toolbar}>
-            <div className={`${styles.iconContainer} ${this.shouldHighlight(value) ? styles.toolbarActive : ''}`}>
-              <Icon
-                name="filter"
-                title="添加/移除该值到筛选条件中"
-                onClick={this.changeSearchFilter.bind(this, value)}
-              ></Icon>
-            </div>
-            <div className={`${styles.iconContainer} ${this.state.isInJsonMode ? styles.toolbarActive : ''}`}>
-              <Icon name="brackets-curly" onClick={this.toggle.bind(this, value)} title="JSON格式查看"></Icon>
-            </div>
+      <td className={styles.td}>
+        <div className={styles.toolbar}>
+          <div className={`${styles.iconContainer} ${this.shouldHighlight(value) ? styles.toolbarActive : ''}`}>
+            <Icon
+              name="filter"
+              title="添加/移除该值到筛选条件中"
+              onClick={this.changeSearchFilter.bind(this, value)}
+            ></Icon>
           </div>
-        ) : (
-          <></>
-        )}
+          <div className={`${styles.iconContainer} ${this.state.isInJsonMode ? styles.toolbarActive : ''}`}>
+            <Icon name="brackets-curly" onClick={this.toggle.bind(this, value)} title="JSON格式查看"></Icon>
+          </div>
+        </div>
         {this.state.isInJsonMode ? (
           <div>{HighlightView({ entity: utils.stringToJson(value), language: Languages.json })}</div>
         ) : (
