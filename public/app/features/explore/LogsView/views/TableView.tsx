@@ -185,7 +185,7 @@ export default class TableView extends React.Component<Props, State> {
                   )}
                 </td>
               ) : (
-                <FieldView value={flattenEntity[key]}></FieldView>
+                <FieldView highlight={_.includes(this.props.searchFilters, key)} value={flattenEntity[key]}></FieldView>
               )}
             </tr>
           ))}

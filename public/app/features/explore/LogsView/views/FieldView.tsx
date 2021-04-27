@@ -36,11 +36,19 @@ const styles = stylesFactory(() => {
         color: rgb(51, 162, 229) !important;
       }
     `,
+
+    highlight: css`
+      background-color: yellow;
+      color: #000;
+      padding-left: 2px;
+      padding-right: 2px;
+    `,
   };
 })();
 
 interface Props {
   value: any;
+  highlight: boolean;
 }
 
 interface State {
@@ -96,7 +104,12 @@ export default class FieldView extends React.PureComponent<Props, State> {
         {this.state.isInJsonMode ? (
           <div>{HighlightView({ entity: utils.stringToJson(value), language: Languages.json })}</div>
         ) : (
-          <div dangerouslySetInnerHTML={{ __html: this.formatField(value) }}></div>
+          <div>
+            <span
+              className={this.props.highlight ? styles.highlight : ''}
+              dangerouslySetInnerHTML={{ __html: this.formatField(value) }}
+            ></span>
+          </div>
         )}
       </td>
     );
