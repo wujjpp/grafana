@@ -86,40 +86,43 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
       const q: any = queries[0];
       let queryText: string = q.queryText;
 
-      const exists = _.includes(this.state.searchFilters, fieldName);
-      let newSearchFilters = _.map(this.state.searchFilters, (o) => o);
+      if (_.isString(queryText)) {
+        const exists = _.includes(this.state.searchFilters, fieldName);
+        let newSearchFilters = _.map(this.state.searchFilters, (o) => o);
 
-      if (!exists) {
-        newSearchFilters.push(fieldName);
-        let index = _.lastIndexOf(queryText, '|');
-        if (index !== -1) {
-          const first = _.trim(queryText.substr(0, index));
-          const last = _.trim(queryText.substr(index));
-          queryText = `${first} and ${fieldName}:${value} ${last}`;
+        if (!exists) {
+          newSearchFilters.push(fieldName);
+          let index = queryText.indexOf('|');
+
+          if (index !== -1) {
+            const first = _.trim(queryText.substr(0, index));
+            const last = _.trim(queryText.substr(index));
+            queryText = `${first} and ${fieldName}:${value} ${last}`;
+          } else {
+            queryText = `${queryText} and ${fieldName}:${value}`;
+          }
         } else {
-          queryText = `${queryText} and ${fieldName}:${value}`;
+          const regex1 = new RegExp(` and ${fieldName}:${value} `, 'ig');
+          const regex2 = new RegExp(` and ${fieldName}:${value}`, 'ig');
+          const regex3 = new RegExp(`and ${fieldName}:${value} `, 'ig');
+
+          queryText = queryText.replace(regex1, ' ');
+          queryText = queryText.replace(regex2, '');
+          queryText = queryText.replace(regex3, '');
+          queryText = _.trim(queryText);
+
+          newSearchFilters = _.filter(newSearchFilters, (o) => o !== fieldName);
         }
-      } else {
-        const regex1 = new RegExp(` and ${fieldName}:${value} `, 'ig');
-        const regex2 = new RegExp(` and ${fieldName}:${value}`, 'ig');
-        const regex3 = new RegExp(`and ${fieldName}:${value} `, 'ig');
 
-        queryText = queryText.replace(regex1, ' ');
-        queryText = queryText.replace(regex2, '');
-        queryText = queryText.replace(regex3, '');
-        queryText = _.trim(queryText);
-
-        newSearchFilters = _.filter(newSearchFilters, (o) => o !== fieldName);
+        // 复写
+        q.queryText = queryText;
+        // 重新初始化一个DataQuery数组
+        const qs = _.map(queries, (q) => q);
+        // 设置state
+        this.setState({ ...this.state, searchFilters: newSearchFilters });
+        // 设置查询，这边会触发真实查询
+        this.props.setQueries(exploreId, qs);
       }
-
-      // 复写
-      q.queryText = queryText;
-      // 重新初始化一个DataQuery数组
-      const qs = _.map(queries, (q) => q);
-      // 设置state
-      this.setState({ ...this.state, searchFilters: newSearchFilters });
-      // 设置查询，这边会触发真实查询
-      this.props.setQueries(exploreId, qs);
     }
   }
 
@@ -129,75 +132,80 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     if (queries.length > 0) {
       const q: any = queries[0];
       let queryText: string = q.queryText;
-      const exists = _.includes(this.state.valueFilters, value);
-      let newValueFilters = _.map(this.state.valueFilters, (o) => o);
 
-      if (!exists) {
-        newValueFilters.push(value);
-        let index = _.lastIndexOf(queryText, '|');
-        if (index !== -1) {
-          const first = _.trim(queryText.substr(0, index));
-          const last = _.trim(queryText.substr(index));
-          queryText = `${first} and '${value}' ${last}`;
+      if (_.isString(queryText)) {
+        const exists = _.includes(this.state.valueFilters, value);
+        let newValueFilters = _.map(this.state.valueFilters, (o) => o);
+
+        if (!exists) {
+          newValueFilters.push(value);
+          let index = queryText.indexOf('|');
+          if (index !== -1) {
+            const first = _.trim(queryText.substr(0, index));
+            const last = _.trim(queryText.substr(index));
+            queryText = `${first} and '${value}' ${last}`;
+          } else {
+            queryText = `${queryText} and '${value}'`;
+          }
         } else {
-          queryText = `${queryText} and '${value}'`;
+          const regex1 = new RegExp(` and '${value}' `, 'ig');
+          const regex2 = new RegExp(` and '${value}'`, 'ig');
+          const regex3 = new RegExp(`and '${value}' `, 'ig');
+          queryText = queryText.replace(regex1, ' ');
+          queryText = queryText.replace(regex2, '');
+          queryText = queryText.replace(regex3, '');
+          queryText = _.trim(queryText);
+
+          newValueFilters = _.filter(newValueFilters, (o) => o !== value);
         }
-      } else {
-        const regex1 = new RegExp(` and '${value}' `, 'ig');
-        const regex2 = new RegExp(` and '${value}'`, 'ig');
-        const regex3 = new RegExp(`and '${value}' `, 'ig');
-        queryText = queryText.replace(regex1, ' ');
-        queryText = queryText.replace(regex2, '');
-        queryText = queryText.replace(regex3, '');
-        queryText = _.trim(queryText);
 
-        newValueFilters = _.filter(newValueFilters, (o) => o !== value);
+        q.queryText = queryText;
+        // 重新初始化一个DataQuery数组
+        const qs = _.map(queries, (q) => q);
+        // 设置state
+        this.setState({ ...this.state, valueFilters: newValueFilters });
+        // 设置查询，这边会触发真实查询
+        this.props.setQueries(exploreId, qs);
       }
-
-      q.queryText = queryText;
-      // 重新初始化一个DataQuery数组
-      const qs = _.map(queries, (q) => q);
-      // 设置state
-      this.setState({ ...this.state, valueFilters: newValueFilters });
-      // 设置查询，这边会触发真实查询
-      this.props.setQueries(exploreId, qs);
     }
   }
 
   componentDidMount() {
     const { queryText } = this.props;
 
-    // 处理search filters
-    const arr = _.chain(queryText)
-      .split('and')
-      .filter((s) => s.indexOf(':') !== -1) // 选择 fieldName:value的条件
-      .map((s) => _.trim(s))
-      .map((s) => {
-        let condition = _.split(s, ':');
-        return {
-          fieldName: _.trim(condition[0]),
-          fieldValue: _.trim(condition[1]),
-        };
-      })
-      .filter((o) => o.fieldValue !== '')
-      .value();
+    if (_.isString(queryText)) {
+      // 处理search filters
+      const arr = _.chain(queryText)
+        .split('and')
+        .filter((s) => s.indexOf(':') !== -1) // 选择 fieldName:value的条件
+        .map((s) => _.trim(s))
+        .map((s) => {
+          let condition = _.split(s, ':');
+          return {
+            fieldName: _.trim(condition[0]),
+            fieldValue: _.trim(condition[1]),
+          };
+        })
+        .filter((o) => o.fieldValue !== '')
+        .value();
 
-    const searchFilters = _.map(arr, (o) => o.fieldName);
+      const searchFilters = _.map(arr, (o) => o.fieldName);
 
-    // 处理 value filters
-    // 取语句前半段
-    let first = queryText;
-    if (first.indexOf('|') !== -1) {
-      first = first.substr(0, first.indexOf('|'));
+      // 处理 value filters
+      // 取语句前半段
+      let first = queryText;
+      if (first.indexOf('|') !== -1) {
+        first = first.substr(0, first.indexOf('|'));
+      }
+      const valueFilters = _.chain(first)
+        .split('and')
+        .filter((s) => s.indexOf(':') === -1 && _.trim(s) !== '*') // 过滤掉 filedName:value 和 "*" 的条件
+        // TODO: 这边有点问题，假如值中包含"'"的话，也将被替换掉
+        .map((s) => _.trim(s).replace(/'/gi, ''))
+        .value();
+
+      this.setState({ ...this.state, searchFilters, valueFilters });
     }
-    const valueFilters = _.chain(first)
-      .split('and')
-      .filter((s) => s.indexOf(':') === -1 && _.trim(s) !== '*') // 过滤掉 filedName:value 和 "*" 的条件
-      // TODO: 这边有点问题，假如值中包含"'"的话，也将被替换掉
-      .map((s) => _.trim(s).replace(/'/gi, ''))
-      .value();
-
-    this.setState({ ...this.state, searchFilters, valueFilters });
   }
 
   // 渲染详情视图

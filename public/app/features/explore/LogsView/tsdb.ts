@@ -42,47 +42,50 @@ class TSDB {
   ): Promise<{ histograms: Array<{ time: number; count: number }>; timeStep: number }> {
     // 去掉 "|" 之后的SQL语句
     let query = queryText;
-    if (query.indexOf('|') !== -1) {
-      query = queryText.substring(0, queryText.indexOf('|'));
-    }
 
-    const requestData: any = {
-      Queries: [
-        {
-          queryType: 'histograms',
-          target: 'query',
-          refId: 'A',
-          datasourceId: dataSourceId,
-          queryText: query,
-          hide: false,
-        },
-      ],
-    };
-
-    requestData.From = moment(from).valueOf().toString();
-    requestData.To = moment(to).valueOf().toString();
-
-    const results = await this.query(requestData);
-
-    if (results.length > 0) {
-      let timeStep = 1;
-
-      const histograms = _.map(results[0], (o) => {
-        return {
-          time: +o.to,
-          count: +o.count,
-        };
-      });
-
-      // 从第二个数据点计算timestep
-      if (results.length > 0 && results[0].length >= 3) {
-        timeStep = +results[0][1].to - +results[0][1].from;
+    if (_.isString(query)) {
+      if (query.indexOf('|') !== -1) {
+        query = queryText.substring(0, queryText.indexOf('|'));
       }
 
-      return {
-        timeStep,
-        histograms,
+      const requestData: any = {
+        Queries: [
+          {
+            queryType: 'histograms',
+            target: 'query',
+            refId: 'A',
+            datasourceId: dataSourceId,
+            queryText: query,
+            hide: false,
+          },
+        ],
       };
+
+      requestData.From = moment(from).valueOf().toString();
+      requestData.To = moment(to).valueOf().toString();
+
+      const results = await this.query(requestData);
+
+      if (results.length > 0) {
+        let timeStep = 1;
+
+        const histograms = _.map(results[0], (o) => {
+          return {
+            time: +o.to,
+            count: +o.count,
+          };
+        });
+
+        // 从第二个数据点计算timestep
+        if (results.length > 0 && results[0].length >= 3) {
+          timeStep = +results[0][1].to - +results[0][1].from;
+        }
+
+        return {
+          timeStep,
+          histograms,
+        };
+      }
     }
 
     return { histograms: [], timeStep: 1 };
