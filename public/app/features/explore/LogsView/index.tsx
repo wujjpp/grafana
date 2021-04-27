@@ -28,8 +28,9 @@ interface Props {
 
 interface State {
   expand: Record<string, boolean>;
-  filters: string[];
+  columnFilters: string[];
   searchFilters: string[];
+  valueFilters: string[];
   histograms: Array<{ time: number; count: number }>;
   timeStep: number;
 }
@@ -44,8 +45,9 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
   styles = getStyles();
   state: State = {
     expand: {},
-    filters: [],
+    columnFilters: [],
     searchFilters: [],
+    valueFilters: [],
     histograms: [],
     timeStep: 1,
   };
@@ -68,13 +70,13 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
   }
 
   toggleFilter(fieldName: string) {
-    let filters = this.state.filters;
-    if (_.includes(this.state.filters, fieldName)) {
-      filters = _.filter(this.state.filters, (k) => k !== fieldName);
+    let columnFilters = this.state.columnFilters;
+    if (_.includes(this.state.columnFilters, fieldName)) {
+      columnFilters = _.filter(this.state.columnFilters, (k) => k !== fieldName);
     } else {
-      filters.push(fieldName);
+      columnFilters.push(fieldName);
     }
-    this.setState({ ...this.state, filters });
+    this.setState({ ...this.state, columnFilters });
   }
 
   // 选择filter
@@ -82,45 +84,93 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     const { queries, exploreId } = this.props;
     if (queries.length > 0) {
       const q: any = queries[0];
+      let queryText: string = q.queryText;
 
       const exists = _.includes(this.state.searchFilters, fieldName);
       let newSearchFilters = _.map(this.state.searchFilters, (o) => o);
 
       if (!exists) {
         newSearchFilters.push(fieldName);
-        let index = _.lastIndexOf(q.queryText, '|');
+        let index = _.lastIndexOf(queryText, '|');
         if (index !== -1) {
-          const first = q.substr(0, index);
-          const last = q.substr(index);
-          q.queryText = `${first} and ${fieldName}:${value} ${last}`;
+          const first = _.trim(queryText.substr(0, index));
+          const last = _.trim(queryText.substr(index));
+          queryText = `${first} and ${fieldName}:${value} ${last}`;
         } else {
-          q.queryText = `${q.queryText} and ${fieldName}:${value}`;
+          queryText = `${queryText} and ${fieldName}:${value}`;
         }
       } else {
         const regex1 = new RegExp(` and ${fieldName}:${value} `, 'ig');
         const regex2 = new RegExp(` and ${fieldName}:${value}`, 'ig');
         const regex3 = new RegExp(`and ${fieldName}:${value} `, 'ig');
 
-        q.queryText = q.queryText.replace(regex1, ' ');
-        q.queryText = q.queryText.replace(regex2, ' ');
-        q.queryText = q.queryText.replace(regex3, ' ');
-        q.queryText = _.trim(q.queryText);
+        queryText = queryText.replace(regex1, ' ');
+        queryText = queryText.replace(regex2, '');
+        queryText = queryText.replace(regex3, '');
+        queryText = _.trim(queryText);
 
         newSearchFilters = _.filter(newSearchFilters, (o) => o !== fieldName);
       }
 
-      this.setState({ ...this.state, searchFilters: newSearchFilters });
-
+      // 复写
+      q.queryText = queryText;
+      // 重新初始化一个DataQuery数组
       const qs = _.map(queries, (q) => q);
+      // 设置state
+      this.setState({ ...this.state, searchFilters: newSearchFilters });
+      // 设置查询，这边会触发真实查询
+      this.props.setQueries(exploreId, qs);
+    }
+  }
+
+  // 选择filter
+  changeValueSearchFilter(value: string): void {
+    const { queries, exploreId } = this.props;
+    if (queries.length > 0) {
+      const q: any = queries[0];
+      let queryText: string = q.queryText;
+      const exists = _.includes(this.state.valueFilters, value);
+      let newValueFilters = _.map(this.state.valueFilters, (o) => o);
+
+      if (!exists) {
+        newValueFilters.push(value);
+        let index = _.lastIndexOf(queryText, '|');
+        if (index !== -1) {
+          const first = _.trim(queryText.substr(0, index));
+          const last = _.trim(queryText.substr(index));
+          queryText = `${first} and '${value}' ${last}`;
+        } else {
+          queryText = `${queryText} and '${value}'`;
+        }
+      } else {
+        const regex1 = new RegExp(` and '${value}' `, 'ig');
+        const regex2 = new RegExp(` and '${value}'`, 'ig');
+        const regex3 = new RegExp(`and '${value}' `, 'ig');
+        queryText = queryText.replace(regex1, ' ');
+        queryText = queryText.replace(regex2, '');
+        queryText = queryText.replace(regex3, '');
+        queryText = _.trim(queryText);
+
+        newValueFilters = _.filter(newValueFilters, (o) => o !== value);
+      }
+
+      q.queryText = queryText;
+      // 重新初始化一个DataQuery数组
+      const qs = _.map(queries, (q) => q);
+      // 设置state
+      this.setState({ ...this.state, valueFilters: newValueFilters });
+      // 设置查询，这边会触发真实查询
       this.props.setQueries(exploreId, qs);
     }
   }
 
   componentDidMount() {
     const { queryText } = this.props;
+
+    // 处理search filters
     const arr = _.chain(queryText)
       .split('and')
-      .filter((s) => s.indexOf(':') !== -1)
+      .filter((s) => s.indexOf(':') !== -1) // 选择 fieldName:value的条件
       .map((s) => _.trim(s))
       .map((s) => {
         let condition = _.split(s, ':');
@@ -133,7 +183,21 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
       .value();
 
     const searchFilters = _.map(arr, (o) => o.fieldName);
-    this.setState({ ...this.state, searchFilters });
+
+    // 处理 value filters
+    // 取语句前半段
+    let first = queryText;
+    if (first.indexOf('|') !== -1) {
+      first = first.substr(0, first.indexOf('|'));
+    }
+    const valueFilters = _.chain(first)
+      .split('and')
+      .filter((s) => s.indexOf(':') === -1 && _.trim(s) !== '*') // 过滤掉 filedName:value 和 "*" 的条件
+      // TODO: 这边有点问题，假如值中包含"'"的话，也将被替换掉
+      .map((s) => _.trim(s).replace(/'/gi, ''))
+      .value();
+
+    this.setState({ ...this.state, searchFilters, valueFilters });
   }
 
   // 渲染详情视图
@@ -147,13 +211,15 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
               index={i}
               isExpand={isExpand}
               data={data}
-              filters={this.state.filters}
+              columnFilters={this.state.columnFilters}
               searchFilters={this.state.searchFilters}
+              valueFilters={this.state.valueFilters}
               dataSourceId={this.props.dataSourceId}
               queryText={this.props.queryText}
               absoluteTimeRange={this.props.absoluteRange}
               onToggleFilter={this.toggleFilter.bind(this)}
               onChangeSearchFilter={this.changeSearchFilter.bind(this)}
+              onChangeValueSearchFilter={this.changeValueSearchFilter.bind(this)}
             ></DetailView>
           </td>
         </tr>
@@ -249,7 +315,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
           </thead>
           <tbody>
             {values.map((v, i) => (
-              <React.Fragment key={`${v['time']}-${i}`}>
+              <React.Fragment key={v['logId'] || `${v['time']}-${i}`}>
                 <tr onClick={this.toggle.bind(this, i)} title="点击展开或收起" style={{ cursor: 'pointer' }}>
                   <td className={this.styles.snCell}>
                     {i + 1}
@@ -261,7 +327,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
                   </td>
                   <td>
                     <div className={this.styles.logSummary}>
-                      {summaryView({ data: v, filters: this.state.filters })}
+                      {summaryView({ data: v, columnFilters: this.state.columnFilters })}
                     </div>
                   </td>
                 </tr>

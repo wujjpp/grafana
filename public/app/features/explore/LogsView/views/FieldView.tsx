@@ -9,6 +9,8 @@ import _ from 'lodash';
 import HighlightView, { Languages } from './HighlightView';
 import utils from '../utils';
 
+require('./global.css');
+
 const styles = stylesFactory(() => {
   return {
     td: css`
@@ -23,32 +25,23 @@ const styles = stylesFactory(() => {
       right: 6px;
       bottom: 6px;
       cursor: pointer;
-      color: rgb(51, 162, 229);
-      :hover {
-        // color: rgb(255, 255, 255);
-        color: rgb(51, 162, 229);
-      }
     `,
 
     toolbarActive: css`
       color: rgb(51, 162, 229);
-      :hover {
-        color: rgb(51, 162, 229) !important;
-      }
     `,
 
-    highlight: css`
-      background-color: yellow;
-      color: #000;
-      padding-left: 2px;
-      padding-right: 2px;
+    iconContainer: css`
+      padding-left: 6px;
+      display: inline-block;
     `,
   };
 })();
 
 interface Props {
   value: any;
-  highlight: boolean;
+  valueFilters: string[];
+  onChangeValueSearchFilter: (value: string) => void;
 }
 
 interface State {
@@ -64,9 +57,25 @@ export default class FieldView extends React.PureComponent<Props, State> {
 
   // 格式化内容，遇到"回车"换成<br />
   formatField(v: string) {
+    // 处理换行
     if (_.isString(v) && v.indexOf('\n') !== 0) {
       v = v.replace(/\n/gi, '<br />');
     }
+
+    // 处理高亮
+    if (_.isString(v) && this.props.valueFilters.length > 0) {
+      const matches = _.map(this.props.valueFilters, (key) => {
+        return {
+          regexp: new RegExp(`${key}`, 'ig'),
+          key: key,
+        };
+      });
+
+      _.forEach(matches, (match) => {
+        v = v.replace(match.regexp, `<em>${match.key}</em>`);
+      });
+    }
+
     return v;
   }
 
@@ -89,14 +98,35 @@ export default class FieldView extends React.PureComponent<Props, State> {
     this.setState({ ...this.state, showToolbar: false });
   }
 
+  changeSearchFilter(value: any, event: any) {
+    const { onChangeValueSearchFilter } = this.props;
+    if (onChangeValueSearchFilter) {
+      onChangeValueSearchFilter(value);
+    }
+  }
+
+  shouldHighlight(value: string): any {
+    const { valueFilters } = this.props;
+    return _.some(valueFilters, (v) => value.indexOf(v) !== -1);
+  }
+
   render() {
     const { value } = this.props;
 
     return (
       <td className={styles.td} onMouseEnter={this.mouseEnter.bind(this)} onMouseLeave={this.mouseLeave.bind(this)}>
-        {this.state.showToolbar || this.state.isInJsonMode ? (
-          <div className={`${styles.toolbar} ${this.state.isInJsonMode ? styles.toolbarActive : ''}`}>
-            <Icon name="brackets-curly" onClick={this.toggle.bind(this, value)} title="View as JSON"></Icon>
+        {this.state.showToolbar ? (
+          <div className={styles.toolbar}>
+            <div className={`${styles.iconContainer} ${this.shouldHighlight(value) ? styles.toolbarActive : ''}`}>
+              <Icon
+                name="filter"
+                title="添加/移除该值到筛选条件中"
+                onClick={this.changeSearchFilter.bind(this, value)}
+              ></Icon>
+            </div>
+            <div className={`${styles.iconContainer} ${this.state.isInJsonMode ? styles.toolbarActive : ''}`}>
+              <Icon name="brackets-curly" onClick={this.toggle.bind(this, value)} title="JSON格式查看"></Icon>
+            </div>
           </div>
         ) : (
           <></>
@@ -105,10 +135,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
           <div>{HighlightView({ entity: utils.stringToJson(value), language: Languages.json })}</div>
         ) : (
           <div>
-            <span
-              className={this.props.highlight ? styles.highlight : ''}
-              dangerouslySetInnerHTML={{ __html: this.formatField(value) }}
-            ></span>
+            <span dangerouslySetInnerHTML={{ __html: this.formatField(value) }}></span>
           </div>
         )}
       </td>

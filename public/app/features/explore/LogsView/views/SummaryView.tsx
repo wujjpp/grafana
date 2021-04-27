@@ -27,12 +27,12 @@ const styles = stylesFactory(() => {
   };
 })();
 
-const SummaryView = ({ data, filters }: { data: any; filters: string[] }): JSX.Element => {
+const SummaryView = ({ data, columnFilters }: { data: any; columnFilters: string[] }): JSX.Element => {
   let o = utils.flattenObject(data);
   let keys = [];
 
-  if (filters.length > 0) {
-    keys = _.chain(filters).sort().value();
+  if (columnFilters.length > 0) {
+    keys = _.chain(columnFilters).sort().value();
   } else {
     keys = _.chain(o).keys().sort().value();
   }

@@ -5,7 +5,7 @@
 import _ from 'lodash';
 import HighlightView, { Languages } from './HighlightView';
 
-const JsonView = ({ entity, filters }: { entity: any; filters?: string[] }): JSX.Element => {
+const JsonView = ({ entity, columnFilters }: { entity: any; columnFilters?: string[] }): JSX.Element => {
   return HighlightView({ entity, language: Languages.json });
 };
 

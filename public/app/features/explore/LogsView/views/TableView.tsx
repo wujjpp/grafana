@@ -76,13 +76,15 @@ const getFieldClassName = (key: string) => {
 
 export interface Props {
   entity: any;
-  filters: string[];
+  columnFilters: string[];
   searchFilters: string[];
+  valueFilters: string[];
   dataSourcedId: number;
   queryText: string;
   absoluteTimeRange: AbsoluteTimeRange;
   onToggleFilter: (fieldName: string) => void;
   onChangeSearchFilter: ({ fieldName, value }: { fieldName: string; value: any }) => void;
+  onChangeValueSearchFilter: (value: string) => void;
 }
 
 interface StateItem {
@@ -135,8 +137,15 @@ export default class TableView extends React.Component<Props, State> {
     }
   }
 
+  changeValueSearchFilter(value: string, event: any): void {
+    const { onChangeValueSearchFilter } = this.props;
+    if (onChangeValueSearchFilter) {
+      onChangeValueSearchFilter(value);
+    }
+  }
+
   render() {
-    const { entity, filters, onToggleFilter } = this.props;
+    const { entity, columnFilters, onToggleFilter, valueFilters } = this.props;
 
     let flattenEntity = utils.flattenObject(entity);
     let keys = _.chain(flattenEntity).keys().sort().value();
@@ -154,7 +163,9 @@ export default class TableView extends React.Component<Props, State> {
                 <Icon name="signal" title="查看分布统计" onClick={this.toggleMode.bind(this, key)}></Icon>
               </td>
               <td
-                className={`${styles.td} ${styles.iconCell} ${_.includes(filters, key) ? styles.iconCellActive : ''}`}
+                className={`${styles.td} ${styles.iconCell} ${
+                  _.includes(columnFilters, key) ? styles.iconCellActive : ''
+                }`}
               >
                 <Icon
                   name="eye"
@@ -185,7 +196,11 @@ export default class TableView extends React.Component<Props, State> {
                   )}
                 </td>
               ) : (
-                <FieldView highlight={_.includes(this.props.searchFilters, key)} value={flattenEntity[key]}></FieldView>
+                <FieldView
+                  onChangeValueSearchFilter={this.changeValueSearchFilter.bind(this, flattenEntity[key])}
+                  value={flattenEntity[key]}
+                  valueFilters={valueFilters}
+                ></FieldView>
               )}
             </tr>
           ))}

@@ -14,13 +14,15 @@ interface Props {
   index: number;
   isExpand: boolean;
   data: any;
-  filters: string[];
+  columnFilters: string[];
   searchFilters: string[];
+  valueFilters: string[];
   dataSourceId: number;
   queryText: string;
   absoluteTimeRange: AbsoluteTimeRange;
   onToggleFilter: (fieldName: string) => void;
   onChangeSearchFilter: ({ fieldName, value }: { fieldName: string; value: any }) => void;
+  onChangeValueSearchFilter: (value: string) => void;
 }
 
 enum ViewMode {
@@ -45,13 +47,15 @@ export default class DetailView extends PureComponent<Props> {
     const {
       isExpand,
       data,
-      filters,
+      columnFilters,
       onToggleFilter,
       searchFilters,
+      valueFilters,
       dataSourceId,
       queryText,
       absoluteTimeRange,
       onChangeSearchFilter,
+      onChangeValueSearchFilter,
     } = this.props;
     return isExpand ? (
       <div className={this.styles.container}>
@@ -72,17 +76,19 @@ export default class DetailView extends PureComponent<Props> {
         </div>
         <div className={this.styles.viewContainer}>
           {this.state.viewMode === ViewMode.JSON ? (
-            jsonView({ entity: data, filters })
+            jsonView({ entity: data, columnFilters })
           ) : (
             <TableView
               entity={data}
-              filters={filters}
+              columnFilters={columnFilters}
               searchFilters={searchFilters}
+              valueFilters={valueFilters}
               onToggleFilter={onToggleFilter}
               dataSourcedId={dataSourceId}
               queryText={queryText}
               absoluteTimeRange={absoluteTimeRange}
               onChangeSearchFilter={onChangeSearchFilter}
+              onChangeValueSearchFilter={onChangeValueSearchFilter}
             ></TableView>
           )}
         </div>
