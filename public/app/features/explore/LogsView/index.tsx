@@ -3,7 +3,7 @@
  */
 
 import React, { Component } from 'react';
-import { dateTimeParse, AbsoluteTimeRange } from '@grafana/data';
+import { dateTimeParse, AbsoluteTimeRange, DataQuery } from '@grafana/data';
 import { css } from 'emotion';
 import { stylesFactory, Icon, IconName } from '@grafana/ui';
 import _ from 'lodash';
@@ -16,6 +16,7 @@ import { hot } from 'react-hot-loader';
 import { connect, ConnectedProps } from 'react-redux';
 import { StoreState } from 'app/types';
 import HistogramView from './views/HistogramView';
+import { setQueries } from '../state/query';
 
 interface Props {
   exploreId: ExploreId;
@@ -28,6 +29,7 @@ interface Props {
 interface State {
   expand: Record<string, boolean>;
   filters: string[];
+  searchFilters: string[];
   histograms: Array<{ time: number; count: number }>;
   timeStep: number;
 }
@@ -43,6 +45,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
   state: State = {
     expand: {},
     filters: [],
+    searchFilters: [],
     histograms: [],
     timeStep: 1,
   };
@@ -74,6 +77,65 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     this.setState({ ...this.state, filters });
   }
 
+  // 选择filter
+  changeSearchFilter({ fieldName, value }: { fieldName: string; value: any }): void {
+    const { queries, exploreId } = this.props;
+    if (queries.length > 0) {
+      const q: any = queries[0];
+
+      const exists = _.includes(this.state.searchFilters, fieldName);
+      let newSearchFilters = _.map(this.state.searchFilters, (o) => o);
+
+      if (!exists) {
+        newSearchFilters.push(fieldName);
+        let index = _.lastIndexOf(q.queryText, '|');
+        if (index !== -1) {
+          const first = q.substr(0, index);
+          const last = q.substr(index);
+          q.queryText = `${first} and ${fieldName}:${value} ${last}`;
+        } else {
+          q.queryText = `${q.queryText} and ${fieldName}:${value}`;
+        }
+      } else {
+        const regex1 = new RegExp(` and ${fieldName}:${value} `, 'ig');
+        const regex2 = new RegExp(` and ${fieldName}:${value}`, 'ig');
+        const regex3 = new RegExp(`and ${fieldName}:${value} `, 'ig');
+
+        q.queryText = q.queryText.replace(regex1, ' ');
+        q.queryText = q.queryText.replace(regex2, ' ');
+        q.queryText = q.queryText.replace(regex3, ' ');
+        q.queryText = _.trim(q.queryText);
+
+        newSearchFilters = _.filter(newSearchFilters, (o) => o !== fieldName);
+      }
+
+      this.setState({ ...this.state, searchFilters: newSearchFilters });
+
+      const qs = _.map(queries, (q) => q);
+      this.props.setQueries(exploreId, qs);
+    }
+  }
+
+  componentDidMount() {
+    const { queryText } = this.props;
+    const arr = _.chain(queryText)
+      .split('and')
+      .filter((s) => s.indexOf(':') !== -1)
+      .map((s) => _.trim(s))
+      .map((s) => {
+        let condition = _.split(s, ':');
+        return {
+          fieldName: _.trim(condition[0]),
+          fieldValue: _.trim(condition[1]),
+        };
+      })
+      .filter((o) => o.fieldValue !== '')
+      .value();
+
+    const searchFilters = _.map(arr, (o) => o.fieldName);
+    this.setState({ ...this.state, searchFilters });
+  }
+
   // 渲染详情视图
   renderDetailView(i: number, data: any): JSX.Element {
     let isExpand = this.state.expand[this.getKey(i)];
@@ -86,10 +148,12 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
               isExpand={isExpand}
               data={data}
               filters={this.state.filters}
+              searchFilters={this.state.searchFilters}
               dataSourceId={this.props.dataSourceId}
               queryText={this.props.queryText}
               absoluteTimeRange={this.props.absoluteRange}
               onToggleFilter={this.toggleFilter.bind(this)}
+              onChangeSearchFilter={this.changeSearchFilter.bind(this)}
             ></DetailView>
           </td>
         </tr>
@@ -101,17 +165,11 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
   // 获取IconName
   getIconName(i: number): IconName {
     let isExpand = this.state.expand[this.getKey(i)];
-    if (isExpand) {
-      return isExpand ? 'angle-down' : 'angle-right';
-    }
-    return 'plus';
+    return isExpand ? 'angle-down' : 'angle-right';
   }
 
   // Graph上选择时间区域
-  timeRangeChanged(absoluteRange: AbsoluteTimeRange) {
-    const { updateTimeRange } = this.props;
-    updateTimeRange(absoluteRange);
-  }
+  timeRangeChanged(absoluteRange: AbsoluteTimeRange) {}
 
   loadHistograms() {
     const { absoluteRange, dataSourceId, queryState, queryText } = this.props;
@@ -224,6 +282,7 @@ function mapStateToProps(
   const explore = state.explore;
   // @ts-ignore
   const item: ExploreItemState = explore[exploreId];
+  const queries: DataQuery[] = item.queries;
 
   // 查询语句
   let queryText = '';
@@ -242,10 +301,13 @@ function mapStateToProps(
     absoluteRange,
     queryText,
     queryState,
+    queries,
   };
 }
 
-const mapDispatchToProps = {};
+const mapDispatchToProps = {
+  setQueries,
+};
 
 const connector = connect(mapStateToProps, mapDispatchToProps);
 type PropsFromRedux = ConnectedProps<typeof connector>;

@@ -77,10 +77,12 @@ const getFieldClassName = (key: string) => {
 export interface Props {
   entity: any;
   filters: string[];
+  searchFilters: string[];
   dataSourcedId: number;
   queryText: string;
   absoluteTimeRange: AbsoluteTimeRange;
   onToggleFilter: (fieldName: string) => void;
+  onChangeSearchFilter: ({ fieldName, value }: { fieldName: string; value: any }) => void;
 }
 
 interface StateItem {
@@ -99,9 +101,9 @@ type State = Record<string, FieldState>;
 export default class TableView extends React.Component<Props, State> {
   state: State = {};
 
-  toggleMode(key: string, target: any) {
+  toggleMode(key: string, event: any) {
     const { queryText, absoluteTimeRange, dataSourcedId } = this.props;
-    const fieldState: FieldState = this.state[key] || { show: false, loading: false, items: [] };
+    const fieldState: FieldState = this.state[key] || { show: true, loading: false, items: [] };
 
     fieldState.show = !fieldState.show;
     if (fieldState.show) {
@@ -126,6 +128,13 @@ export default class TableView extends React.Component<Props, State> {
     this.setState({ ...this.state, ...obj });
   }
 
+  changeSearchFilter({ fieldName, value }: { fieldName: string; value: any }, event: any): void {
+    const { onChangeSearchFilter } = this.props;
+    if (onChangeSearchFilter) {
+      onChangeSearchFilter({ fieldName, value });
+    }
+  }
+
   render() {
     const { entity, filters, onToggleFilter } = this.props;
 
@@ -142,16 +151,28 @@ export default class TableView extends React.Component<Props, State> {
                   this.state[key] && this.state[key].show ? styles.iconCellActive : ''
                 }`}
               >
-                <Icon name="signal" onClick={this.toggleMode.bind(this, key)}></Icon>
+                <Icon name="signal" title="查看分布统计" onClick={this.toggleMode.bind(this, key)}></Icon>
               </td>
               <td
                 className={`${styles.td} ${styles.iconCell} ${_.includes(filters, key) ? styles.iconCellActive : ''}`}
               >
                 <Icon
                   name="eye"
+                  title="添加该栏位到表格中"
                   onClick={() => {
                     onToggleFilter(key);
                   }}
+                ></Icon>
+              </td>
+              <td
+                className={`${styles.td} ${styles.iconCell} ${
+                  _.includes(this.props.searchFilters, key) ? styles.iconCellActive : ''
+                }`}
+              >
+                <Icon
+                  name="filter"
+                  title="添加该栏位到筛选条件中"
+                  onClick={this.changeSearchFilter.bind(this, { fieldName: key, value: flattenEntity[key] })}
                 ></Icon>
               </td>
               <td className={`${styles.td} ${styles.fieldNameCell} ${getFieldClassName(key)}`}>{key}</td>

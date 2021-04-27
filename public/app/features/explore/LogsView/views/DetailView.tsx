@@ -15,10 +15,12 @@ interface Props {
   isExpand: boolean;
   data: any;
   filters: string[];
+  searchFilters: string[];
   dataSourceId: number;
   queryText: string;
   absoluteTimeRange: AbsoluteTimeRange;
   onToggleFilter: (fieldName: string) => void;
+  onChangeSearchFilter: ({ fieldName, value }: { fieldName: string; value: any }) => void;
 }
 
 enum ViewMode {
@@ -40,7 +42,17 @@ export default class DetailView extends PureComponent<Props> {
   }
 
   render() {
-    const { isExpand, data, filters, onToggleFilter, dataSourceId } = this.props;
+    const {
+      isExpand,
+      data,
+      filters,
+      onToggleFilter,
+      searchFilters,
+      dataSourceId,
+      queryText,
+      absoluteTimeRange,
+      onChangeSearchFilter,
+    } = this.props;
     return isExpand ? (
       <div className={this.styles.container}>
         {/* {statusBar(data['level'])} */}
@@ -65,10 +77,12 @@ export default class DetailView extends PureComponent<Props> {
             <TableView
               entity={data}
               filters={filters}
+              searchFilters={searchFilters}
               onToggleFilter={onToggleFilter}
               dataSourcedId={dataSourceId}
-              queryText={this.props.queryText}
-              absoluteTimeRange={this.props.absoluteTimeRange}
+              queryText={queryText}
+              absoluteTimeRange={absoluteTimeRange}
+              onChangeSearchFilter={onChangeSearchFilter}
             ></TableView>
           )}
         </div>

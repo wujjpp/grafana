@@ -361,7 +361,7 @@ export class Explore extends React.PureComponent<ExploreProps, ExploreState> {
                 addQueryRowButtonDisabled={isLive}
                 // We cannot show multiple traces at the same time right now so we do not show add query button.
                 //TODO:unification
-                addQueryRowButtonHidden={false}
+                addQueryRowButtonHidden={showLogsView}
                 richHistoryButtonActive={showRichHistory}
                 queryInspectorButtonActive={showQueryInspector}
                 onClickAddQueryRowButton={this.onClickAddQueryRowButton}
