@@ -107,7 +107,7 @@ export default class TableView extends React.Component<Props, State> {
 
   toggleMode(key: string, event: any) {
     const { queryText, absoluteTimeRange, dataSourcedId } = this.props;
-    const fieldState: FieldState = this.state[key] || { show: true, loading: false, isInJsonMode: false, items: [] };
+    const fieldState: FieldState = this.state[key] || { show: false, loading: false, isInJsonMode: false, items: [] };
 
     fieldState.show = !fieldState.show;
     if (fieldState.show) {
