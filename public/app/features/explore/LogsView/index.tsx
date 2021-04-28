@@ -215,7 +215,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
         .split('and')
         .filter((s) => s.indexOf(':') === -1 && _.trim(s) !== '*') // 过滤掉 filedName:value 和 "*" 的条件
         // TODO: 这边有点问题，假如值中包含"'"的话，也将被替换掉
-        .map((s) => _.trim(s).replace(/'/gi, ''))
+        .map((s) => _.trim(s).replace(/"/gi, ''))
         .value();
 
       this.setState({ ...this.state, searchFilters, valueFilters });
