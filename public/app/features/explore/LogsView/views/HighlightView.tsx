@@ -7,6 +7,9 @@ import _ from 'lodash';
 import { stylesFactory } from '@grafana/ui';
 import { css } from 'emotion';
 const SyntaxHighlighter = require('react-syntax-highlighter').default;
+
+console.log(require('react-syntax-highlighter'));
+
 const { monokai } = require('react-syntax-highlighter/dist/esm/styles/hljs');
 
 const styles = stylesFactory(() => {

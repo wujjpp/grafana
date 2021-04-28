@@ -22,8 +22,9 @@ const styles = stylesFactory(() => {
     `,
     toolbar: css`
       position: absolute;
-      right: 6px;
-      bottom: 6px;
+      left: -50px;
+      top: 50%;
+      margin-top: -11px;
       cursor: pointer;
     `,
 
