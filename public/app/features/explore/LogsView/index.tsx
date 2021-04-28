@@ -148,7 +148,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
             const last = _.trim(queryText.substr(index));
             queryText = `${first} and "${value}" ${last}`;
           } else {
-            queryText = `${queryText} and '${value}'`;
+            queryText = `${queryText} and "${value}"`;
           }
         } else {
           const regex1 = new RegExp(` and "${value}" `, 'ig');
