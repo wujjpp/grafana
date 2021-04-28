@@ -28,14 +28,16 @@ const styles = stylesFactory(() => {
     `,
 
     toolbarActive: css`
-      color: rgb(51, 162, 229);
+      color: rgb(51, 162, 229) !important;
     `,
 
     iconContainer: css`
       padding-left: 6px;
       display: inline-block;
+      color: rgb(179, 179, 179);
+
       :hover {
-        color: rgb(51, 162, 229);
+        color: rgb(255, 255, 255);
       }
     `,
   };

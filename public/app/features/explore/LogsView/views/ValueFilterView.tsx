@@ -41,8 +41,9 @@ const styles = stylesFactory(() => {
       cursor: pointer;
       display: inline-block;
       margin-left: 4px;
-      &:hover {
-        color: rgb(51, 162, 229);
+      color: rgb(179, 179, 179);
+      :hover {
+        color: rgb(255, 255, 255);
       }
     `,
   };
