@@ -8,14 +8,14 @@ import jsonView from './JsonView';
 import { css } from 'emotion';
 import { stylesFactory } from '@grafana/ui';
 import { AbsoluteTimeRange } from '@grafana/data';
-// import statusBar from './StatusBar';
+import { SearchFilterItem } from '../types';
 
 interface Props {
   index: number;
   isExpand: boolean;
   data: any;
   columnFilters: string[];
-  searchFilters: string[];
+  searchFilters: SearchFilterItem[];
   valueFilters: string[];
   dataSourceId: number;
   queryText: string;

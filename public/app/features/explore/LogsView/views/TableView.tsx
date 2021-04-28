@@ -12,6 +12,7 @@ import DistributionView from './DistributionView';
 import FieldView from './FieldView';
 import { AbsoluteTimeRange } from '@grafana/data';
 import tsdb from '../tsdb';
+import { SearchFilterItem } from '../types';
 
 const styles = stylesFactory(() => {
   return {
@@ -77,7 +78,7 @@ const getFieldClassName = (key: string) => {
 export interface Props {
   entity: any;
   columnFilters: string[];
-  searchFilters: string[];
+  searchFilters: SearchFilterItem[];
   valueFilters: string[];
   dataSourcedId: number;
   queryText: string;
@@ -177,7 +178,7 @@ export default class TableView extends React.Component<Props, State> {
               </td>
               <td
                 className={`${styles.td} ${styles.iconCell} ${
-                  _.includes(this.props.searchFilters, key) ? styles.iconCellActive : ''
+                  _.some(this.props.searchFilters, (o) => o.name === key) ? styles.iconCellActive : ''
                 }`}
               >
                 <Icon

@@ -17,6 +17,9 @@ import { connect, ConnectedProps } from 'react-redux';
 import { StoreState } from 'app/types';
 import HistogramView from './views/HistogramView';
 import { setQueries } from '../state/query';
+import { SearchFilterItem } from './types';
+import SearchFilterView from './views/SearchFilterView';
+import ValueFilterView from './views/ValueFilterView';
 
 interface Props {
   exploreId: ExploreId;
@@ -29,7 +32,7 @@ interface Props {
 interface State {
   expand: Record<string, boolean>;
   columnFilters: string[];
-  searchFilters: string[];
+  searchFilters: SearchFilterItem[];
   valueFilters: string[];
   histograms: Array<{ time: number; count: number }>;
   timeStep: number;
@@ -87,11 +90,11 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
       let queryText: string = q.queryText;
 
       if (_.isString(queryText)) {
-        const exists = _.includes(this.state.searchFilters, fieldName);
+        const exists = _.some(this.state.searchFilters, (filter) => filter.name === fieldName);
         let newSearchFilters = _.map(this.state.searchFilters, (o) => o);
 
         if (!exists) {
-          newSearchFilters.push(fieldName);
+          newSearchFilters.push({ name: fieldName, operator: ':', value: value });
           let index = queryText.indexOf('|');
 
           if (index !== -1) {
@@ -111,7 +114,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
           queryText = queryText.replace(regex3, '');
           queryText = _.trim(queryText);
 
-          newSearchFilters = _.filter(newSearchFilters, (o) => o !== fieldName);
+          newSearchFilters = _.filter(newSearchFilters, (filter) => filter.name !== fieldName);
         }
 
         // 复写
@@ -179,17 +182,20 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
         .split('and')
         .filter((s) => s.indexOf(':') !== -1) // 选择 fieldName:value的条件
         .map((s) => _.trim(s))
-        .map((s) => {
-          let condition = _.split(s, ':');
-          return {
-            fieldName: _.trim(condition[0]),
-            fieldValue: _.trim(condition[1]),
-          };
-        })
-        .filter((o) => o.fieldValue !== '')
+        .map(
+          (s): SearchFilterItem => {
+            let condition = _.split(s, ':');
+            return {
+              name: _.trim(condition[0]),
+              operator: ':',
+              value: _.trim(condition[1]),
+            };
+          }
+        )
+        .filter((o) => o.value !== '')
         .value();
 
-      const searchFilters = _.map(arr, (o) => o.fieldName);
+      const searchFilters = _.map(arr, (filter) => filter);
 
       // 处理 value filters
       // 取语句前半段
@@ -309,6 +315,18 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
             timeStep={this.state.timeStep}
             onTimeRangeChanged={this.timeRangeChanged.bind(this)}
           ></HistogramView>
+        </div>
+        {/* filter区域 */}
+        <div className={this.styles.filterContainer}>
+          筛选条件&nbsp;&nbsp;:&nbsp;&nbsp;
+          {SearchFilterView({
+            searchFilters: this.state.searchFilters,
+            onChangeSearchFilter: this.changeSearchFilter.bind(this),
+          })}
+          {ValueFilterView({
+            valueFilters: this.state.valueFilters,
+            onChangeValueFilter: this.changeValueSearchFilter.bind(this),
+          })}
         </div>
         {/* 表格区域 */}
         <table className={this.styles.table}>
@@ -456,6 +474,10 @@ const getStyles = stylesFactory(() => {
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 4;
+    `,
+
+    filterContainer: css`
+      margin-bottom: 21px;
     `,
   };
 });
