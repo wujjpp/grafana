@@ -320,17 +320,21 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
           ></HistogramView>
         </div>
         {/* filter区域 */}
-        <div className={this.styles.filterContainer}>
-          筛选条件&nbsp;:&nbsp;
-          {SearchFilterView({
-            searchFilters: this.state.searchFilters,
-            onChangeSearchFilter: this.changeSearchFilter.bind(this),
-          })}
-          {ValueFilterView({
-            valueFilters: this.state.valueFilters,
-            onChangeValueFilter: this.changeValueSearchFilter.bind(this),
-          })}
-        </div>
+        {this.state.searchFilters.length > 0 || this.state.valueFilters.length > 0 ? (
+          <div className={this.styles.filterContainer}>
+            筛选条件&nbsp;:&nbsp;
+            {SearchFilterView({
+              searchFilters: this.state.searchFilters,
+              onChangeSearchFilter: this.changeSearchFilter.bind(this),
+            })}
+            {ValueFilterView({
+              valueFilters: this.state.valueFilters,
+              onChangeValueFilter: this.changeValueSearchFilter.bind(this),
+            })}
+          </div>
+        ) : (
+          <></>
+        )}
         {/* 表格区域 */}
         <table className={this.styles.table}>
           <thead>
