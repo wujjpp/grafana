@@ -171,7 +171,7 @@ export default class TableView extends React.Component<Props, State> {
               >
                 <Icon
                   name="eye"
-                  title="添加该栏位到表格中"
+                  title="在表格中添加/移除该栏位"
                   onClick={() => {
                     onToggleFilter(key);
                   }}
@@ -184,7 +184,7 @@ export default class TableView extends React.Component<Props, State> {
               >
                 <Icon
                   name="filter"
-                  title="添加该栏位到筛选条件中"
+                  title="在筛选条件添加/移除该筛选条件"
                   onClick={this.changeSearchFilter.bind(this, { fieldName: key, value: flattenEntity[key] })}
                 ></Icon>
               </td>

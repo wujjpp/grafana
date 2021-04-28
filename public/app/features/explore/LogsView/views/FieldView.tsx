@@ -125,7 +125,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
           <div className={`${styles.iconContainer} ${this.shouldHighlight(value) ? styles.toolbarActive : ''}`}>
             <Icon
               name="filter"
-              title="添加/移除该值到筛选条件中"
+              title="在筛选条件中添加/移除该值"
               onClick={this.changeSearchFilter.bind(this, value)}
             ></Icon>
           </div>
