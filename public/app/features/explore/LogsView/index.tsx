@@ -249,7 +249,10 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
   }
 
   // Graph上选择时间区域
-  timeRangeChanged(absoluteRange: AbsoluteTimeRange) {}
+  timeRangeChanged(absoluteRange: AbsoluteTimeRange) {
+    const { updateTimeRange } = this.props;
+    updateTimeRange(absoluteRange);
+  }
 
   loadHistograms() {
     const { absoluteRange, dataSourceId, queryState, queryText } = this.props;
@@ -318,7 +321,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
         </div>
         {/* filter区域 */}
         <div className={this.styles.filterContainer}>
-          筛选条件&nbsp;&nbsp;:&nbsp;&nbsp;
+          筛选条件&nbsp;:&nbsp;
           {SearchFilterView({
             searchFilters: this.state.searchFilters,
             onChangeSearchFilter: this.changeSearchFilter.bind(this),
@@ -414,6 +417,13 @@ const getStyles = stylesFactory(() => {
 
     graphContainer: css`
       margin-bottom: 21px;
+      position: relative;
+    `,
+
+    graphSwitchContainer: css`
+      position: absolute;
+      left: 0px;
+      top: 0px;
     `,
 
     table: css`
