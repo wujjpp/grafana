@@ -54,8 +54,7 @@ const styles = stylesFactory(() => {
     `,
 
     fieldNameCell: css`
-      width: 380px;
-      padding-right: 44px;
+      width: 360px;
     `,
 
     highlight: css`

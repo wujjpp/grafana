@@ -15,14 +15,14 @@ const styles = stylesFactory(() => {
   return {
     td: css`
       word-wrap: break-word;
-      padding: 6px;
+      padding-left: 50px !important;
       border: 0 !important;
       line-height: 1.5;
       position: relative;
     `,
     toolbar: css`
       position: absolute;
-      left: -50px;
+      left: 0px;
       top: 50%;
       margin-top: -11px;
       cursor: pointer;
@@ -52,11 +52,13 @@ interface Props {
 
 interface State {
   isInJsonMode: boolean;
+  showToolbar: boolean;
 }
 
 export default class FieldView extends React.PureComponent<Props, State> {
   state: State = {
     isInJsonMode: false,
+    showToolbar: false,
   };
 
   // 格式化内容，遇到"回车"换成<br />
@@ -116,23 +118,35 @@ export default class FieldView extends React.PureComponent<Props, State> {
     return _.some(valueFilters, (v) => tmp.indexOf(v) !== -1);
   }
 
+  mouseEnter() {
+    this.setState({ ...this.state, showToolbar: true });
+  }
+
+  mouseLeave() {
+    this.setState({ ...this.state, showToolbar: false });
+  }
+
   render() {
     const { value } = this.props;
 
     return (
-      <td className={styles.td}>
-        <div className={styles.toolbar}>
-          <div className={`${styles.iconContainer} ${this.shouldHighlight(value) ? styles.toolbarActive : ''}`}>
-            <Icon
-              name="filter"
-              title="在筛选条件中添加/移除该值"
-              onClick={this.changeSearchFilter.bind(this, value)}
-            ></Icon>
+      <td className={styles.td} onMouseEnter={this.mouseEnter.bind(this)} onMouseLeave={this.mouseLeave.bind(this)}>
+        {this.state.showToolbar ? (
+          <div className={styles.toolbar}>
+            <div className={`${styles.iconContainer} ${this.shouldHighlight(value) ? styles.toolbarActive : ''}`}>
+              <Icon
+                name="filter"
+                title="在筛选条件中添加/移除该值"
+                onClick={this.changeSearchFilter.bind(this, value)}
+              ></Icon>
+            </div>
+            <div className={`${styles.iconContainer} ${this.state.isInJsonMode ? styles.toolbarActive : ''}`}>
+              <Icon name="brackets-curly" onClick={this.toggle.bind(this, value)} title="JSON格式查看"></Icon>
+            </div>
           </div>
-          <div className={`${styles.iconContainer} ${this.state.isInJsonMode ? styles.toolbarActive : ''}`}>
-            <Icon name="brackets-curly" onClick={this.toggle.bind(this, value)} title="JSON格式查看"></Icon>
-          </div>
-        </div>
+        ) : (
+          <></>
+        )}
         {this.state.isInJsonMode ? (
           <div>{HighlightView({ entity: utils.stringToJson(value), language: Languages.json })}</div>
         ) : (
