@@ -175,7 +175,15 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
 
   componentDidMount() {
     const { queryText } = this.props;
+    this.initSearchFilters(queryText);
+  }
 
+  UNSAFE_componentWillReceiveProps(nextProps: any) {
+    const { queryText } = nextProps;
+    this.initSearchFilters(queryText);
+  }
+
+  initSearchFilters(queryText: string) {
     if (_.isString(queryText)) {
       // 处理search filters
       const arr = _.chain(queryText)
