@@ -64,7 +64,7 @@ const HighlightView = ({ entity, language = Languages.json }: { entity: any; lan
 
   return (
     <div className={styles.highlightView}>
-      <SyntaxHighlighter language={language} style={monokai}>
+      <SyntaxHighlighter language={language} style={monokai} wrapLongLines={true}>
         {JSON.stringify(entity, null, 4)}
       </SyntaxHighlighter>
     </div>
