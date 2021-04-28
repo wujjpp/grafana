@@ -424,12 +424,6 @@ const getStyles = stylesFactory(() => {
       position: relative;
     `,
 
-    graphSwitchContainer: css`
-      position: absolute;
-      left: 0px;
-      top: 0px;
-    `,
-
     table: css`
       width: 100%;
       border: 1px solid rgb(32, 34, 38);
