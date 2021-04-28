@@ -54,7 +54,7 @@ const styles = stylesFactory(() => {
     `,
 
     fieldNameCell: css`
-      width: 360px;
+      width: 340px;
     `,
 
     highlight: css`
@@ -198,7 +198,7 @@ export default class TableView extends React.Component<Props, State> {
                 </td>
               ) : (
                 <FieldView
-                  onChangeValueSearchFilter={this.changeValueSearchFilter.bind(this, flattenEntity[key])}
+                  onChangeValueSearchFilter={this.changeValueSearchFilter.bind(this)}
                   value={flattenEntity[key]}
                   valueFilters={valueFilters}
                 ></FieldView>

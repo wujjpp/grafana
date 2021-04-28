@@ -4,7 +4,7 @@
 
 import React, { PureComponent } from 'react';
 import TableView from './TableView';
-import jsonView from './JsonView';
+import JsonView from './JsonView';
 import { css } from 'emotion';
 import { stylesFactory } from '@grafana/ui';
 import { AbsoluteTimeRange } from '@grafana/data';
@@ -76,7 +76,7 @@ export default class DetailView extends PureComponent<Props> {
         </div>
         <div className={this.styles.viewContainer}>
           {this.state.viewMode === ViewMode.JSON ? (
-            jsonView({ entity: data, columnFilters })
+            <JsonView entity={data}></JsonView>
           ) : (
             <TableView
               entity={data}

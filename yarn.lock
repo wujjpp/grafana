@@ -13698,12 +13698,7 @@ flatbuffers@1.11.0:
   resolved "https://registry.yarnpkg.com/flatbuffers/-/flatbuffers-1.11.0.tgz#90a47e584dd7851ad7a913f5a0ee99c1d76ce59f"
   integrity sha512-0PqFKtXI4MjxomI7jO4g5XfLPm/15g2R+5WGCHBGYGh0ihQiypnHlJ6bMmkkrAe0GzZ4d7PDAfCONKIPUxNF+A==
 
-flatted@^3.1.0:
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.1.1.tgz#c4b489e80096d9df1dfc97c79871aea7c617c469"
-  integrity sha512-zAoAQiudy+r5SvnSw3KJy5os/oRJYHzrzja/tBDqrZtNhUw8bt6y8OBzMWcjWr+8liV8Eb6yOhw8WZ7VFZ5ZzA==
-
-flatted@^3.1.1:
+flatted@^3.1.0, flatted@^3.1.1:
   version "3.1.1"
   resolved "http://npm.greatld.com:4873/flatted/-/flatted-3.1.1.tgz#c4b489e80096d9df1dfc97c79871aea7c617c469"
   integrity sha1-xLSJ6ACW2d8d/JfHmHGup8YXxGk=
@@ -14794,7 +14789,7 @@ highlight.js@^10.1.1, highlight.js@~10.5.0:
   resolved "https://registry.yarnpkg.com/highlight.js/-/highlight.js-10.5.0.tgz#3f09fede6a865757378f2d9ebdcbc15ba268f98f"
   integrity sha512-xTmvd9HiIHR6L53TMC7TKolEj65zG1XU+Onr8oi86mYa+nLcIbxTTWkpW7CsEwv/vK7u1zb8alZIMLDqqN6KTw==
 
-highlight.js@^10.4.1, highlight.js@~10.7.0:
+highlight.js@^10.7.2:
   version "10.7.2"
   resolved "http://npm.greatld.com:4873/highlight.js/-/highlight.js-10.7.2.tgz#89319b861edc66c48854ed1e6da21ea89f847360"
   integrity sha1-iTGbhh7cZsSIVO0ebaIeqJ+Ec2A=
@@ -17726,14 +17721,6 @@ lowlight@^1.14.0:
   dependencies:
     fault "^1.0.0"
     highlight.js "~10.5.0"
-
-lowlight@^1.17.0:
-  version "1.20.0"
-  resolved "http://npm.greatld.com:4873/lowlight/-/lowlight-1.20.0.tgz#ddb197d33462ad0d93bf19d17b6c301aa3941888"
-  integrity sha1-3bGX0zRirQ2TvxnRe2wwGqOUGIg=
-  dependencies:
-    fault "^1.0.0"
-    highlight.js "~10.7.0"
 
 lru-cache@^4.0.1:
   version "4.1.5"
@@ -20970,7 +20957,7 @@ prismjs@1.21.0:
   optionalDependencies:
     clipboard "^2.0.0"
 
-prismjs@^1.21.0, prismjs@^1.22.0, prismjs@~1.23.0:
+prismjs@^1.21.0, prismjs@~1.23.0:
   version "1.23.0"
   resolved "https://registry.yarnpkg.com/prismjs/-/prismjs-1.23.0.tgz#d3b3967f7d72440690497652a9d40ff046067f33"
   integrity sha512-c29LVsqOaLbBHuIbsTxaKENh1N2EQBOHaWv7gkHN4dgRbxSREqDnDbtFJYdpPauS4YCplMSNCABQ6Eeor69bAA==
@@ -22000,17 +21987,6 @@ react-syntax-highlighter@^13.5.0:
     prismjs "^1.21.0"
     refractor "^3.1.0"
 
-react-syntax-highlighter@^15.4.3:
-  version "15.4.3"
-  resolved "http://npm.greatld.com:4873/react-syntax-highlighter/-/react-syntax-highlighter-15.4.3.tgz#fffe3286677ac470b963b364916d16374996f3a6"
-  integrity sha1-//4yhmd6xHC5Y7NkkW0WN0mW86Y=
-  dependencies:
-    "@babel/runtime" "^7.3.1"
-    highlight.js "^10.4.1"
-    lowlight "^1.17.0"
-    prismjs "^1.22.0"
-    refractor "^3.2.0"
-
 react-table@7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/react-table/-/react-table-7.0.0.tgz#3297e454cbffe916626b184f5394d7e7e098fa36"
@@ -22457,7 +22433,7 @@ reflect.ownkeys@^0.2.0:
   resolved "https://registry.yarnpkg.com/reflect.ownkeys/-/reflect.ownkeys-0.2.0.tgz#749aceec7f3fdf8b63f927a04809e90c5c0b3460"
   integrity sha1-dJrO7H8/34tj+SegSAnpDFwLNGA=
 
-refractor@^3.1.0, refractor@^3.2.0:
+refractor@^3.1.0:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/refractor/-/refractor-3.3.1.tgz#ebbc04b427ea81dc25ad333f7f67a0b5f4f0be3a"
   integrity sha512-vaN6R56kLMuBszHSWlwTpcZ8KTMG6aUCok4GrxYDT20UIOXxOc5o6oDc8tNTzSlH3m2sI+Eu9Jo2kVdDcUTWYw==

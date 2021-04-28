@@ -34,7 +34,17 @@ const stringToJson = (str: string): any => {
   throw new Error('Cannot convert string to json');
 };
 
+const trimSemicolon = (val: string): string => {
+  val = _.trimStart(val, '"');
+  val = _.trimStart(val, "'");
+  val = _.trimEnd(val, '"');
+  val = _.trimEnd(val, "'");
+
+  return val;
+};
+
 export default {
   flattenObject,
   stringToJson,
+  trimSemicolon,
 };

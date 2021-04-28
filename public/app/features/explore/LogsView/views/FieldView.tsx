@@ -6,7 +6,7 @@ import React from 'react';
 import { Icon, stylesFactory } from '@grafana/ui';
 import { css } from 'emotion';
 import _ from 'lodash';
-import HighlightView, { Languages } from './HighlightView';
+import JsonView from './JsonView';
 import utils from '../utils';
 
 require('./global.css');
@@ -100,22 +100,11 @@ export default class FieldView extends React.PureComponent<Props, State> {
     }
   }
 
-  changeSearchFilter(value: any, event: any) {
+  changeSearchValueFilter(value: any, event: any) {
     const { onChangeValueSearchFilter } = this.props;
     if (onChangeValueSearchFilter) {
       onChangeValueSearchFilter(value);
     }
-  }
-
-  shouldHighlight(value: any): any {
-    const { valueFilters } = this.props;
-    let tmp = '';
-    if (_.isString(value)) {
-      tmp = value;
-    } else if (!_.isUndefined(tmp)) {
-      tmp = value.toString();
-    }
-    return _.some(valueFilters, (v) => tmp.indexOf(v) !== -1);
   }
 
   mouseEnter() {
@@ -127,19 +116,19 @@ export default class FieldView extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { value } = this.props;
+    const { value, valueFilters } = this.props;
 
     return (
       <td className={styles.td} onMouseEnter={this.mouseEnter.bind(this)} onMouseLeave={this.mouseLeave.bind(this)}>
         {this.state.showToolbar ? (
           <div className={styles.toolbar}>
-            <div className={`${styles.iconContainer} ${this.shouldHighlight(value) ? styles.toolbarActive : ''}`}>
+            {/* <div className={`${styles.iconContainer} ${this.shouldHighlight(value) ? styles.toolbarActive : ''}`}>
               <Icon
                 name="filter"
                 title="在筛选条件中添加/移除该值"
-                onClick={this.changeSearchFilter.bind(this, value)}
+                onClick={this.changeSearchValueFilter.bind(this, value)}
               ></Icon>
-            </div>
+            </div> */}
             <div className={`${styles.iconContainer} ${this.state.isInJsonMode ? styles.toolbarActive : ''}`}>
               <Icon name="brackets-curly" onClick={this.toggle.bind(this, value)} title="JSON格式查看"></Icon>
             </div>
@@ -148,7 +137,13 @@ export default class FieldView extends React.PureComponent<Props, State> {
           <></>
         )}
         {this.state.isInJsonMode ? (
-          <div>{HighlightView({ entity: utils.stringToJson(value), language: Languages.json })}</div>
+          <div>
+            <JsonView
+              entity={utils.stringToJson(value)}
+              onValueClick={this.changeSearchValueFilter.bind(this)}
+              valueFilters={valueFilters}
+            ></JsonView>
+          </div>
         ) : (
           <div>
             <span dangerouslySetInnerHTML={{ __html: this.formatField(value) }}></span>
