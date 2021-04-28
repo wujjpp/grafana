@@ -82,7 +82,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     this.setState({ ...this.state, columnFilters });
   }
 
-  // 选择filter
+  // 选择field filter
   changeSearchFilter({ fieldName, value }: { fieldName: string; value: any }): void {
     const { queries, exploreId } = this.props;
     if (queries.length > 0) {
@@ -129,7 +129,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     }
   }
 
-  // 选择filter
+  // 选择value filter
   changeValueSearchFilter(value: string): void {
     const { queries, exploreId } = this.props;
     if (queries.length > 0) {
@@ -146,14 +146,14 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
           if (index !== -1) {
             const first = _.trim(queryText.substr(0, index));
             const last = _.trim(queryText.substr(index));
-            queryText = `${first} and '${value}' ${last}`;
+            queryText = `${first} and "${value}" ${last}`;
           } else {
             queryText = `${queryText} and '${value}'`;
           }
         } else {
-          const regex1 = new RegExp(` and '${value}' `, 'ig');
-          const regex2 = new RegExp(` and '${value}'`, 'ig');
-          const regex3 = new RegExp(`and '${value}' `, 'ig');
+          const regex1 = new RegExp(` and "${value}" `, 'ig');
+          const regex2 = new RegExp(` and "${value}"`, 'ig');
+          const regex3 = new RegExp(`and "${value}" `, 'ig');
           queryText = queryText.replace(regex1, ' ');
           queryText = queryText.replace(regex2, '');
           queryText = queryText.replace(regex3, '');

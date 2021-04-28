@@ -96,6 +96,7 @@ interface StateItem {
 interface FieldState {
   show: boolean;
   loading: boolean;
+  isInJsonMode: boolean;
   items: StateItem[];
 }
 
@@ -106,7 +107,7 @@ export default class TableView extends React.Component<Props, State> {
 
   toggleMode(key: string, event: any) {
     const { queryText, absoluteTimeRange, dataSourcedId } = this.props;
-    const fieldState: FieldState = this.state[key] || { show: true, loading: false, items: [] };
+    const fieldState: FieldState = this.state[key] || { show: true, loading: false, isInJsonMode: false, items: [] };
 
     fieldState.show = !fieldState.show;
     if (fieldState.show) {
@@ -145,6 +146,23 @@ export default class TableView extends React.Component<Props, State> {
     }
   }
 
+  toggleJsonMode(key: string, value: any) {
+    const fieldState: FieldState = this.state[key] || { show: false, loading: false, isInJsonMode: false, items: [] };
+    const obj: any = {};
+    obj[key] = fieldState;
+
+    fieldState.isInJsonMode = !fieldState.isInJsonMode;
+
+    if (fieldState.isInJsonMode) {
+      try {
+        utils.stringToJson(value);
+        this.setState({ ...this.state, ...obj });
+      } catch {}
+    } else {
+      this.setState({ ...this.state, ...obj });
+    }
+  }
+
   render() {
     const { entity, columnFilters, onToggleFilter, valueFilters } = this.props;
 
@@ -156,37 +174,52 @@ export default class TableView extends React.Component<Props, State> {
         <tbody>
           {_.map(keys, (key) => (
             <tr title={fieldMeta.getFileDescription(key)} key={key}>
+              {/* 工具按钮一 */}
               <td
                 className={`${styles.td} ${styles.iconCell} ${
                   this.state[key] && this.state[key].show ? styles.iconCellActive : ''
                 }`}
+                title="查看分布统计"
+                onClick={this.toggleMode.bind(this, key)}
               >
-                <Icon name="signal" title="查看分布统计" onClick={this.toggleMode.bind(this, key)}></Icon>
+                <Icon name="signal"></Icon>
               </td>
+
+              {/* 工具按钮二 */}
               <td
                 className={`${styles.td} ${styles.iconCell} ${
                   _.includes(columnFilters, key) ? styles.iconCellActive : ''
                 }`}
+                onClick={() => {
+                  onToggleFilter(key);
+                }}
+                title="在表格中添加/移除该栏位"
               >
-                <Icon
-                  name="eye"
-                  title="在表格中添加/移除该栏位"
-                  onClick={() => {
-                    onToggleFilter(key);
-                  }}
-                ></Icon>
+                <Icon name="eye"></Icon>
               </td>
+
+              {/* 工具按钮三 */}
               <td
                 className={`${styles.td} ${styles.iconCell} ${
                   _.some(this.props.searchFilters, (o) => o.name === key) ? styles.iconCellActive : ''
                 }`}
+                onClick={this.changeSearchFilter.bind(this, { fieldName: key, value: flattenEntity[key] })}
+                title="在筛选条件添加/移除该筛选条件"
               >
-                <Icon
-                  name="filter"
-                  title="在筛选条件添加/移除该筛选条件"
-                  onClick={this.changeSearchFilter.bind(this, { fieldName: key, value: flattenEntity[key] })}
-                ></Icon>
+                <Icon name="filter"></Icon>
               </td>
+
+              {/* 工具按钮四 */}
+              <td
+                className={`${styles.td} ${styles.iconCell} ${
+                  this.state[key] && this.state[key].isInJsonMode ? styles.iconCellActive : ''
+                }`}
+                onClick={this.toggleJsonMode.bind(this, key, flattenEntity[key])}
+                title="以JSON格式查看该栏位值"
+              >
+                <Icon name="brackets-curly"></Icon>
+              </td>
+
               <td className={`${styles.td} ${styles.fieldNameCell} ${getFieldClassName(key)}`}>{key}</td>
               {this.state[key] && this.state[key].show ? (
                 <td className={styles.td}>
@@ -201,6 +234,7 @@ export default class TableView extends React.Component<Props, State> {
                   onChangeValueSearchFilter={this.changeValueSearchFilter.bind(this)}
                   value={flattenEntity[key]}
                   valueFilters={valueFilters}
+                  isInJsonMode={this.state[key] && this.state[key].isInJsonMode}
                 ></FieldView>
               )}
             </tr>

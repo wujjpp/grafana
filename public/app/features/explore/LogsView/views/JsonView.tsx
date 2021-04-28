@@ -64,14 +64,14 @@ export default class JsonView extends React.PureComponent<Props> {
 
         $btn.on('click', () => {
           onValueClick(actualVal);
+          if ($btn.hasClass(this.styles.iconCellActive)) {
+            $btn.removeClass(this.styles.iconCellActive);
+          } else {
+            $btn.addClass(this.styles.iconCellActive);
+          }
         });
 
         let $newValElement;
-        // if (shouldHighlight) {
-        //   $newValElement = $(`<em>${originValue}</em>`);
-        // } else {
-        //   $newValElement = $(`<span>${originValue}</span>`);
-        // }
         $newValElement = $(`<span>${originValue}</span>`);
         $ele.empty().append($newValElement).append($btn);
       }
@@ -152,6 +152,7 @@ const getStyles = stylesFactory(() => {
       color: rgb(179, 179, 179);
       display: inline-block;
       // vertical-align: text-top;
+      margin-left: 4px;
 
       :hover {
         color: rgb(255, 255, 255);
