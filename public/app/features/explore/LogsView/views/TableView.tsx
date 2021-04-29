@@ -57,12 +57,13 @@ const styles = stylesFactory(() => {
       width: 340px;
     `,
 
-    highlight: css`
-      color: red;
+    statusLoading: css`
+      margin-bottom: 0px;
+      color: rgb(51, 162, 229);
     `,
 
-    loading: css`
-      margin-bottom: 0px;
+    statusError: css`
+      color: red;
     `,
   };
 })();
@@ -70,7 +71,7 @@ const styles = stylesFactory(() => {
 // 获取栏位样式
 const getFieldClassName = (key: string) => {
   if (key === 'fields.error.stack') {
-    return styles.highlight;
+    return styles.statusError;
   }
   return '';
 };
@@ -94,10 +95,13 @@ interface StateItem {
 }
 
 interface FieldState {
-  show: boolean;
-  loading: boolean;
+  distribution: {
+    show: boolean;
+    loading: boolean;
+    errorMessage: string;
+    items: StateItem[];
+  };
   isInJsonMode: boolean;
-  items: StateItem[];
 }
 
 type State = Record<string, FieldState>;
@@ -105,26 +109,42 @@ type State = Record<string, FieldState>;
 export default class TableView extends React.Component<Props, State> {
   state: State = {};
 
+  getFieldState(key: string): FieldState {
+    return (
+      this.state[key] || {
+        distribution: {
+          show: false,
+          loading: false,
+          errorMessage: '',
+          items: [],
+        },
+        isInJsonMode: false,
+      }
+    );
+  }
+
   toggleMode(key: string, event: any) {
     const { queryText, absoluteTimeRange, dataSourcedId } = this.props;
-    const fieldState: FieldState = this.state[key] || { show: false, loading: false, isInJsonMode: false, items: [] };
+    const fieldState: FieldState = this.getFieldState(key);
 
-    fieldState.show = !fieldState.show;
-    if (fieldState.show) {
+    fieldState.distribution.show = !fieldState.distribution.show;
+    if (fieldState.distribution.show) {
       const obj: any = {};
       obj[key] = fieldState;
 
-      fieldState.loading = true;
+      fieldState.distribution.loading = true;
       tsdb
         .getDistributionByFieldName(dataSourcedId, queryText, key, absoluteTimeRange.from, absoluteTimeRange.to)
         .then((data: StateItem[]) => {
-          fieldState.items = data;
-          fieldState.loading = false;
-          this.setState({ ...this.state, ...obj });
+          fieldState.distribution.items = data;
+          fieldState.distribution.errorMessage = '';
         })
-        .catch((err) => {})
+        .catch((err) => {
+          fieldState.distribution.errorMessage = err.response?.data?.message || '未知错误';
+        })
         .finally(() => {
-          fieldState.loading = false;
+          fieldState.distribution.loading = false;
+          this.setState({ ...this.state, ...obj });
         });
     }
     const obj: any = {};
@@ -147,7 +167,8 @@ export default class TableView extends React.Component<Props, State> {
   }
 
   toggleJsonMode(key: string, value: any) {
-    const fieldState: FieldState = this.state[key] || { show: false, loading: false, isInJsonMode: false, items: [] };
+    const fieldState: FieldState = this.getFieldState(key);
+
     const obj: any = {};
     obj[key] = fieldState;
 
@@ -177,7 +198,7 @@ export default class TableView extends React.Component<Props, State> {
               {/* 工具按钮一 */}
               <td
                 className={`${styles.td} ${styles.iconCell} ${
-                  this.state[key] && this.state[key].show ? styles.iconCellActive : ''
+                  this.state[key] && this.state[key].distribution.show ? styles.iconCellActive : ''
                 }`}
                 title="查看分布统计"
                 onClick={this.toggleMode.bind(this, key)}
@@ -221,12 +242,17 @@ export default class TableView extends React.Component<Props, State> {
               </td>
 
               <td className={`${styles.td} ${styles.fieldNameCell} ${getFieldClassName(key)}`}>{key}</td>
-              {this.state[key] && this.state[key].show ? (
+              {this.state[key] && this.state[key].distribution.show ? (
                 <td className={styles.td}>
-                  {this.state[key].loading ? (
-                    <LoadingPlaceholder text="数据分析中，请稍后..." className={styles.loading}></LoadingPlaceholder>
+                  {this.state[key].distribution.loading ? (
+                    <LoadingPlaceholder
+                      text="数据分析中，请稍后..."
+                      className={styles.statusLoading}
+                    ></LoadingPlaceholder>
+                  ) : this.state[key].distribution.errorMessage !== '' ? (
+                    <div className={styles.statusError}>{this.state[key].distribution.errorMessage}</div>
                   ) : (
-                    DistributionView({ items: this.state[key].items })
+                    DistributionView({ items: this.state[key].distribution.items })
                   )}
                 </td>
               ) : (
