@@ -3,9 +3,9 @@
  */
 
 import React, { Component } from 'react';
-import { dateTimeParse, AbsoluteTimeRange, DataQuery } from '@grafana/data';
+import { dateTimeParse, AbsoluteTimeRange, DataQuery, DataFrame } from '@grafana/data';
 import { css } from 'emotion';
-import { stylesFactory, Icon, IconName } from '@grafana/ui';
+import { stylesFactory, Icon, IconName, Switch } from '@grafana/ui';
 import _ from 'lodash';
 import statusBar from './views/StatusBar';
 import DetailView from './views/DetailView';
@@ -25,7 +25,7 @@ interface Props {
   exploreId: ExploreId;
   dataSourceId: number;
   width: number;
-  dataFrame: any;
+  dataFrame: DataFrame;
   updateTimeRange: (absoluteRange: AbsoluteTimeRange) => void;
 }
 
@@ -36,6 +36,8 @@ interface State {
   valueFilters: string[];
   histograms: Array<{ time: number; count: number }>;
   timeStep: number;
+  enhancedMode: boolean;
+  showHistograms: boolean;
 }
 
 enum HistogramsState {
@@ -53,6 +55,8 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     valueFilters: [],
     histograms: [],
     timeStep: 1,
+    enhancedMode: true,
+    showHistograms: true,
   };
 
   histogramsStatus = HistogramsState.outdated;
@@ -280,6 +284,16 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     }
   }
 
+  changeEnhancedMode() {
+    const enhancedMode = !this.state.enhancedMode;
+    this.setState({ ...this.state, enhancedMode });
+  }
+
+  toggleHistograms() {
+    const showHistograms = !this.state.showHistograms;
+    this.setState({ ...this.state, showHistograms });
+  }
+
   // 渲染函数
   render() {
     const { dataFrame, absoluteRange, width } = this.props;
@@ -294,6 +308,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
 
     // 处理表格需要的数据
     let values: any[] = [];
+    let columns: string[] = _.map(dataFrame.fields, (f) => f.name);
 
     if (dataFrame.fields.length > 0) {
       const fields = dataFrame.fields;
@@ -317,66 +332,116 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     return (
       <div className={this.styles.container}>
         {/* Graph区域 */}
-        <div className={this.styles.graphContainer}>
-          <HistogramView
-            absoluteTimeRange={absoluteRange}
-            height={120}
-            width={width}
-            histograms={this.state.histograms}
-            timeStep={this.state.timeStep}
-            onTimeRangeChanged={this.timeRangeChanged.bind(this)}
-          ></HistogramView>
-        </div>
-        {/* filter区域 */}
-        {this.state.searchFilters.length > 0 || this.state.valueFilters.length > 0 ? (
-          <div className={this.styles.filterContainer}>
-            筛选条件&nbsp;:&nbsp;
-            {SearchFilterView({
-              searchFilters: this.state.searchFilters,
-              onChangeSearchFilter: this.changeSearchFilter.bind(this),
-            })}
-            {ValueFilterView({
-              valueFilters: this.state.valueFilters,
-              onChangeValueFilter: this.changeValueSearchFilter.bind(this),
-            })}
+        {this.state.showHistograms ? (
+          <div className={this.styles.graphContainer}>
+            <HistogramView
+              absoluteTimeRange={absoluteRange}
+              height={120}
+              width={width}
+              histograms={this.state.histograms}
+              timeStep={this.state.timeStep}
+              onTimeRangeChanged={this.timeRangeChanged.bind(this)}
+            ></HistogramView>
           </div>
         ) : (
           <></>
         )}
+
+        <div className={this.styles.settingsContainer}>
+          {/* filter区域 */}
+
+          {this.state.searchFilters.length > 0 || this.state.valueFilters.length > 0 ? (
+            <div className={this.styles.filterContainer}>
+              筛选条件&nbsp;:&nbsp;
+              {SearchFilterView({
+                searchFilters: this.state.searchFilters,
+                onChangeSearchFilter: this.changeSearchFilter.bind(this),
+              })}
+              {ValueFilterView({
+                valueFilters: this.state.valueFilters,
+                onChangeValueFilter: this.changeValueSearchFilter.bind(this),
+              })}
+            </div>
+          ) : (
+            <></>
+          )}
+          {/* 显示设置区 */}
+          <div className={this.styles.settingsContainerWrapper}>
+            <div className={this.styles.settingsItem}>
+              <div className={this.styles.switchLabel}>显示时序图</div>
+              <div className={this.styles.switchContainer}>
+                <Switch value={this.state.showHistograms} onChange={this.toggleHistograms.bind(this)}></Switch>
+              </div>
+            </div>
+
+            <div className={`${this.styles.settingsItem} ${this.styles.marginLeft10}`}>
+              <div className={this.styles.switchLabel}>增强表格</div>
+              <div className={this.styles.switchContainer}>
+                <Switch value={this.state.enhancedMode} onChange={this.changeEnhancedMode.bind(this)}></Switch>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* 表格区域 */}
-        <table className={this.styles.table}>
-          <thead>
-            {
-              <tr>
-                <th className={this.styles.snCell}>#</th>
-                <th className={this.styles.timeCell}>日志时间</th>
-                <th>日志数据</th>
-              </tr>
-            }
-          </thead>
-          <tbody>
-            {values.map((v, i) => (
-              <React.Fragment key={v['logId'] || `${v['time']}-${i}`}>
-                <tr onClick={this.toggle.bind(this, i)} title="点击展开或收起" style={{ cursor: 'pointer' }}>
-                  <td className={this.styles.snCell}>
-                    {i + 1}
-                    {statusBar(v['level'])}
-                  </td>
-                  <td className={this.styles.timeCell}>
-                    <Icon name={this.getIconName(i)}></Icon>
-                    {dateTimeParse(+v['time']).format('YYYY-MM-DD HH:mm:ss.SSS')}
-                  </td>
-                  <td>
-                    <div className={this.styles.logSummary}>
-                      {summaryView({ data: v, columnFilters: this.state.columnFilters })}
-                    </div>
-                  </td>
+        <div className={this.styles.tableContainer}>
+          {this.state.enhancedMode ? (
+            <table className={this.styles.table}>
+              <thead>
+                <tr>
+                  <th className={this.styles.snCell}>#</th>
+                  <th className={this.styles.timeCell}>日志时间</th>
+                  <th>日志数据</th>
                 </tr>
-                {this.renderDetailView(i, v)}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {values.map((v, i) => (
+                  <React.Fragment key={v['logId'] || `${v['time']}-${i}`}>
+                    <tr onClick={this.toggle.bind(this, i)} title="点击展开或收起" style={{ cursor: 'pointer' }}>
+                      <td className={this.styles.snCell}>
+                        {i + 1}
+                        {statusBar(v['level'])}
+                      </td>
+                      <td className={this.styles.timeCell}>
+                        <Icon name={this.getIconName(i)}></Icon>
+                        {dateTimeParse(+v['time']).format('YYYY-MM-DD HH:mm:ss.SSS')}
+                      </td>
+                      <td>
+                        <div className={this.styles.logSummary}>
+                          {summaryView({ data: v, columnFilters: this.state.columnFilters })}
+                        </div>
+                      </td>
+                    </tr>
+                    {this.renderDetailView(i, v)}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <table className={this.styles.table}>
+              <thead>
+                <tr>
+                  {_.map(columns, (c, i) => (
+                    <th key={i}>{c}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {values.map((v, i) => (
+                  <tr key={i}>
+                    {_.map(columns, (c, j) => {
+                      return (
+                        <td key={`${i}-${j}`} className={`${_.isPlainObject(v[c]) ? '' : this.styles.noNewline}`}>
+                          {_.isPlainObject(v[c]) ? JSON.stringify(v[c], null, 2) : v[c]}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     );
   }
@@ -494,6 +559,45 @@ const getStyles = stylesFactory(() => {
 
     filterContainer: css`
       margin-bottom: 21px;
+    `,
+
+    noNewline: css`
+      word-break: keep-all;
+      white-space: nowrap;
+    `,
+
+    settingsContainer: css`
+      position: relative;
+      min-height: 18px;
+    `,
+
+    settingsContainerWrapper: css`
+      position: absolute;
+      right: 0;
+      top: 2px;
+    `,
+
+    settingsItem: css`
+      display: inline-block;
+    `,
+
+    switchLabel: css`
+      display: inline-block;
+      font-size: 12px;
+      vertical-align: top;
+    `,
+
+    switchContainer: css`
+      display: inline-block;
+      margin-left: 4px;
+    `,
+
+    marginLeft10: css`
+      margin-left: 10px;
+    `,
+
+    tableContainer: css`
+      position: relative;
     `,
   };
 });
