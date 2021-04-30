@@ -347,7 +347,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
           <></>
         )}
 
-        <div className={this.styles.settingsContainer}>
+        <div className={this.styles.mainContainer}>
           {/* filter区域 */}
 
           {this.state.searchFilters.length > 0 || this.state.valueFilters.length > 0 ? (
@@ -366,7 +366,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
             <></>
           )}
           {/* 显示设置区 */}
-          <div className={this.styles.settingsContainerWrapper}>
+          <div className={this.styles.settingsContainer}>
             <div className={this.styles.settingsItem}>
               <div className={this.styles.switchLabel}>显示时序图</div>
               <div className={this.styles.switchContainer}>
@@ -557,21 +557,21 @@ const getStyles = stylesFactory(() => {
       -webkit-line-clamp: 4;
     `,
 
-    filterContainer: css`
-      margin-bottom: 21px;
-    `,
+    filterContainer: css``,
 
     noNewline: css`
       word-break: keep-all;
       white-space: nowrap;
     `,
 
-    settingsContainer: css`
+    mainContainer: css`
       position: relative;
       min-height: 18px;
+      margin-bottom: 21px;
+      padding-right: 200px;
     `,
 
-    settingsContainerWrapper: css`
+    settingsContainer: css`
       position: absolute;
       right: 0;
       top: 2px;
