@@ -92,6 +92,13 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     if (queries.length > 0) {
       const q: any = queries[0];
       let queryText: string = q.queryText;
+      let conditions = q.queryText;
+      let analysisSql = '';
+
+      if (queryText.indexOf('|') !== -1) {
+        conditions = queryText.substr(0, queryText.indexOf('|'));
+        analysisSql = queryText.substr(queryText.indexOf('|'));
+      }
 
       if (_.isString(queryText)) {
         const exists = _.some(this.state.searchFilters, (filter) => filter.name === fieldName);
@@ -99,30 +106,22 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
 
         if (!exists) {
           newSearchFilters.push({ name: fieldName, operator: ':', value: value });
-          let index = queryText.indexOf('|');
-
-          if (index !== -1) {
-            const first = _.trim(queryText.substr(0, index));
-            const last = _.trim(queryText.substr(index));
-            queryText = `${first} and ${fieldName}:${value} ${last}`;
-          } else {
-            queryText = `${queryText} and ${fieldName}:${value}`;
-          }
+          conditions = `${conditions} and ${fieldName}:${value}`;
         } else {
           const regex1 = new RegExp(` and ${fieldName}:${value} `, 'ig');
           const regex2 = new RegExp(` and ${fieldName}:${value}`, 'ig');
           const regex3 = new RegExp(`and ${fieldName}:${value} `, 'ig');
 
-          queryText = queryText.replace(regex1, ' ');
-          queryText = queryText.replace(regex2, '');
-          queryText = queryText.replace(regex3, '');
-          queryText = _.trim(queryText);
+          conditions = conditions.replace(regex1, ' ');
+          conditions = conditions.replace(regex2, '');
+          conditions = conditions.replace(regex3, '');
+          conditions = _.trim(conditions);
 
           newSearchFilters = _.filter(newSearchFilters, (filter) => filter.name !== fieldName);
         }
 
         // 复写
-        q.queryText = queryText;
+        q.queryText = conditions + (analysisSql.length > 0 ? ' ' + analysisSql : '');
         // 重新初始化一个DataQuery数组
         const qs = _.map(queries, (q) => q);
         // 设置state
@@ -188,9 +187,14 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
   }
 
   initSearchFilters(queryText: string) {
-    if (_.isString(queryText)) {
+    let conditions = queryText;
+    if (conditions.indexOf('|') !== -1) {
+      conditions = conditions.substr(0, conditions.indexOf('|'));
+    }
+
+    if (_.isString(conditions)) {
       // 处理search filters
-      const arr = _.chain(queryText)
+      const arr = _.chain(conditions)
         .split('and')
         .filter((s) => s.indexOf(':') !== -1) // 选择 fieldName:value的条件
         .map((s) => _.trim(s))
@@ -210,12 +214,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
       const searchFilters = _.map(arr, (filter) => filter);
 
       // 处理 value filters
-      // 取语句前半段
-      let first = queryText;
-      if (first.indexOf('|') !== -1) {
-        first = first.substr(0, first.indexOf('|'));
-      }
-      const valueFilters = _.chain(first)
+      const valueFilters = _.chain(conditions)
         .split('and')
         .filter((s) => s.indexOf(':') === -1 && _.trim(s) !== '*') // 过滤掉 filedName:value 和 "*" 的条件
         // TODO: 这边有点问题，假如值中包含"'"的话，也将被替换掉
