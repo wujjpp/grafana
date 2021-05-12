@@ -93,7 +93,7 @@ const DistributionView = (props: Props): JSX.Element => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>{`${notNullCount} of ${totalRecords} rows have that field`}</div>
+      <div className={styles.header}>{`${notNullCount} of ${totalRecords} rows have that field(limit 10000)`}</div>
       <div className={styles.body}>
         {_.map(list, (o) => (
           <div className={styles.statsRow} key={`${o.label}-${o.count}`}>
