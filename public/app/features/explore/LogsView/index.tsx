@@ -20,6 +20,7 @@ import { setQueries } from '../state/query';
 import { SearchFilterItem } from './types';
 import SearchFilterView from './views/SearchFilterView';
 import ValueFilterView from './views/ValueFilterView';
+import ColumnFilterView from './views/ColumnFilterView';
 
 interface Props {
   exploreId: ExploreId;
@@ -174,6 +175,10 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
         this.props.setQueries(exploreId, qs);
       }
     }
+  }
+
+  removeColumnFilter(value: string): void {
+    this.setState({ ...this.state, columnFilters: _.filter(this.state.columnFilters, (o) => o !== value) });
   }
 
   componentDidMount() {
@@ -350,20 +355,36 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
           {/* filter区域 */}
 
           {this.state.searchFilters.length > 0 || this.state.valueFilters.length > 0 ? (
-            <div className={this.styles.filterContainer}>
-              筛选条件&nbsp;:&nbsp;
-              {SearchFilterView({
-                searchFilters: this.state.searchFilters,
-                onChangeSearchFilter: this.changeSearchFilter.bind(this),
-              })}
-              {ValueFilterView({
-                valueFilters: this.state.valueFilters,
-                onChangeValueFilter: this.changeValueSearchFilter.bind(this),
+            <>
+              <div className={this.styles.filterContainer}>
+                筛选条件&nbsp;:&nbsp;
+                {SearchFilterView({
+                  searchFilters: this.state.searchFilters,
+                  onChangeSearchFilter: this.changeSearchFilter.bind(this),
+                })}
+                {ValueFilterView({
+                  valueFilters: this.state.valueFilters,
+                  onChangeValueFilter: this.changeValueSearchFilter.bind(this),
+                })}
+              </div>
+            </>
+          ) : (
+            <></>
+          )}
+
+          {/* 显示栏位选择区 */}
+          {this.state.columnFilters.length > 0 ? (
+            <div className={this.styles.filterContainer2}>
+              栏位列表&nbsp;:&nbsp;
+              {ColumnFilterView({
+                columnFilters: this.state.columnFilters,
+                onRemoveColumnFilter: this.removeColumnFilter.bind(this),
               })}
             </div>
           ) : (
             <></>
           )}
+
           {/* 显示设置区 */}
           <div className={this.styles.settingsContainer}>
             <div className={this.styles.settingsItem}>
@@ -557,6 +578,10 @@ const getStyles = stylesFactory(() => {
     `,
 
     filterContainer: css``,
+
+    filterContainer2: css`
+      margin-top: 10px;
+    `,
 
     noNewline: css`
       word-break: keep-all;
