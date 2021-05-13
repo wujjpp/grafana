@@ -85,24 +85,36 @@ export default class JsonView extends React.PureComponent<Props> {
 
     // request context
     if (_.isString(obj?.fields?.requestContext?.headers)) {
-      obj.fields.requestContext.headers = JSON.parse(obj.fields.requestContext.headers);
+      try {
+        obj.fields.requestContext.headers = JSON.parse(obj.fields.requestContext.headers);
+      } catch {}
     }
     if (_.isString(obj?.fields?.requestContext?.query)) {
-      obj.fields.requestContext.query = JSON.parse(obj.fields.requestContext.query);
+      try {
+        obj.fields.requestContext.query = JSON.parse(obj.fields.requestContext.query);
+      } catch {}
     }
     if (_.isString(obj?.fields?.requestContext?.body)) {
-      obj.fields.requestContext.body = JSON.parse(obj.fields.requestContext.body);
+      try {
+        obj.fields.requestContext.body = JSON.parse(obj.fields.requestContext.body);
+      } catch {}
     }
 
     // request info
     if (_.isString(obj?.fields?.requestInfo?.headers)) {
-      obj.fields.requestInfo.headers = JSON.parse(obj.fields.requestInfo.headers);
+      try {
+        obj.fields.requestInfo.headers = JSON.parse(obj.fields.requestInfo.headers);
+      } catch {}
     }
     if (_.isString(obj?.fields?.requestInfo?.query)) {
-      obj.fields.requestInfo.query = JSON.parse(obj.fields.requestInfo.query);
+      try {
+        obj.fields.requestInfo.query = JSON.parse(obj.fields.requestInfo.query);
+      } catch {}
     }
     if (_.isString(obj?.fields?.requestInfo?.body)) {
-      obj.fields.requestInfo.body = JSON.parse(obj.fields.requestInfo.body);
+      try {
+        obj.fields.requestInfo.body = JSON.parse(obj.fields.requestInfo.body);
+      } catch {}
     }
 
     return (
