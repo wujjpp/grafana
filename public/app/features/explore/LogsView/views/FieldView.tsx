@@ -7,6 +7,7 @@ import { Icon, stylesFactory } from '@grafana/ui';
 import { css } from 'emotion';
 import _ from 'lodash';
 import JsonView from './JsonView';
+import SqlView from './SqlView';
 import utils from '../utils';
 
 require('./global.css');
@@ -50,19 +51,18 @@ const styles = stylesFactory(() => {
 
 interface Props {
   isInJsonMode: boolean;
+  isInSqlMode: boolean;
   value: any;
   valueFilters: string[];
   onChangeValueSearchFilter: (value: string) => void;
 }
 
 interface State {
-  showToolbar: boolean;
   expanded: boolean;
 }
 
 export default class FieldView extends React.PureComponent<Props, State> {
   state: State = {
-    showToolbar: false,
     expanded: false,
   };
 
@@ -139,7 +139,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { value, valueFilters, isInJsonMode } = this.props;
+    const { value, valueFilters, isInJsonMode, isInSqlMode } = this.props;
 
     return (
       <td className={styles.td}>
@@ -150,6 +150,10 @@ export default class FieldView extends React.PureComponent<Props, State> {
               onValueClick={this.changeSearchValueFilter.bind(this)}
               valueFilters={valueFilters}
             ></JsonView>
+          </div>
+        ) : isInSqlMode ? (
+          <div>
+            <SqlView sql={value}></SqlView>
           </div>
         ) : (
           <div className={styles.expandedContainer}>

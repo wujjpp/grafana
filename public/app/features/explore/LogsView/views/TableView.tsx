@@ -102,6 +102,7 @@ interface FieldState {
     items: StateItem[];
   };
   isInJsonMode: boolean;
+  isInSqlMode: boolean;
 }
 
 type State = Record<string, FieldState>;
@@ -119,6 +120,7 @@ export default class TableView extends React.Component<Props, State> {
           items: [],
         },
         isInJsonMode: false,
+        isInSqlMode: false,
       }
     );
   }
@@ -177,6 +179,25 @@ export default class TableView extends React.Component<Props, State> {
     if (fieldState.isInJsonMode) {
       try {
         utils.stringToJson(value);
+        fieldState.isInSqlMode = false;
+        this.setState({ ...this.state, ...obj });
+      } catch {}
+    } else {
+      this.setState({ ...this.state, ...obj });
+    }
+  }
+
+  toggleSqlMode(key: string, value: any) {
+    const fieldState: FieldState = this.getFieldState(key);
+
+    const obj: any = {};
+    obj[key] = fieldState;
+
+    fieldState.isInSqlMode = !fieldState.isInSqlMode;
+
+    if (fieldState.isInJsonMode) {
+      try {
+        fieldState.isInJsonMode = false;
         this.setState({ ...this.state, ...obj });
       } catch {}
     } else {
@@ -241,6 +262,17 @@ export default class TableView extends React.Component<Props, State> {
                 <Icon name="brackets-curly"></Icon>
               </td>
 
+              {/* 工具按钮五 */}
+              <td
+                className={`${styles.td} ${styles.iconCell} ${
+                  this.state[key] && this.state[key].isInSqlMode ? styles.iconCellActive : ''
+                }`}
+                onClick={this.toggleSqlMode.bind(this, key, flattenEntity[key])}
+                title="以SQL格式查看该栏位值"
+              >
+                <Icon name="apps"></Icon>
+              </td>
+
               <td className={`${styles.td} ${styles.fieldNameCell} ${getFieldClassName(key)}`}>{key}</td>
               {this.state[key] && this.state[key].distribution.show ? (
                 <td className={styles.td}>
@@ -261,6 +293,7 @@ export default class TableView extends React.Component<Props, State> {
                   value={flattenEntity[key]}
                   valueFilters={valueFilters}
                   isInJsonMode={this.state[key] && this.state[key].isInJsonMode}
+                  isInSqlMode={this.state[key] && this.state[key].isInSqlMode}
                 ></FieldView>
               )}
             </tr>
