@@ -270,7 +270,7 @@ export default class TableView extends React.Component<Props, State> {
                 onClick={this.toggleSqlMode.bind(this, key, flattenEntity[key])}
                 title="以SQL格式查看该栏位值"
               >
-                <Icon name="apps"></Icon>
+                <Icon name="wrap-text"></Icon>
               </td>
 
               <td className={`${styles.td} ${styles.fieldNameCell} ${getFieldClassName(key)}`}>{key}</td>

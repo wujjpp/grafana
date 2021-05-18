@@ -110,7 +110,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
       if (height !== undefined && height > 360) {
         $(this.container).addClass(styles.contentContainer);
         if (this.toggleBtn) {
-          $(this.toggleBtn).addClass(styles.flow);
+          $(this.toggleBtn).addClass(styles.flow).show();
         }
       } else {
         if (this.toggleBtn) {
