@@ -753,6 +753,7 @@ const getStyles = stylesFactory(() => {
 
     paginationInstructionHighlight: css`
       color: rgb(51, 162, 229);
+      line-height: 29px;
     `,
 
     loadingContainer: css`
