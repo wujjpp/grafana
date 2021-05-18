@@ -3,9 +3,9 @@
  */
 
 import React, { Component } from 'react';
-import { dateTimeParse, AbsoluteTimeRange, DataQuery, DataFrame } from '@grafana/data';
+import { dateTimeParse, AbsoluteTimeRange, DataQuery, DataFrame, MutableDataFrame } from '@grafana/data';
 import { css } from 'emotion';
-import { stylesFactory, Icon, IconName, Switch } from '@grafana/ui';
+import { stylesFactory, Icon, IconName, Switch, Pagination, LoadingPlaceholder } from '@grafana/ui';
 import _ from 'lodash';
 import statusBar from './views/StatusBar';
 import DetailView from './views/DetailView';
@@ -39,6 +39,14 @@ interface State {
   timeStep: number;
   enhancedMode: boolean;
   showHistograms: boolean;
+
+  totalRecords: number;
+  numberOfPages: number;
+  currentPage: number;
+  shouldShowPagination: boolean;
+
+  pagedDataFrame: MutableDataFrame;
+  isLoadingPagedData: boolean;
 }
 
 enum HistogramsState {
@@ -58,6 +66,14 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     timeStep: 1,
     enhancedMode: true,
     showHistograms: true,
+
+    totalRecords: 1, // 记录条数
+    numberOfPages: 1, // 最大页码
+    currentPage: 1, // 当前页面
+    shouldShowPagination: true, // 是否需要显示分页组件
+
+    pagedDataFrame: tsdb.getEmptyDataFrame(),
+    isLoadingPagedData: false,
   };
 
   histogramsStatus = HistogramsState.outdated;
@@ -275,10 +291,16 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
 
     if (dataSourceId && queryState === 'Done' && this.histogramsStatus === HistogramsState.outdated) {
       this.histogramsStatus = HistogramsState.loading;
+
       tsdb
         .getHistograms(dataSourceId, absoluteRange.from, absoluteRange.to, queryText)
-        .then((data) => {
-          let state = { ...this.state, histograms: data.histograms, timeStep: data.timeStep };
+        .then((histogramsData) => {
+          let state = {
+            ...this.state,
+            histograms: histogramsData.histograms,
+            timeStep: histogramsData.timeStep,
+          };
+
           this.histogramsStatus = HistogramsState.finished;
           this.setState(state);
         })
@@ -298,24 +320,75 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     this.setState({ ...this.state, showHistograms });
   }
 
+  loadTotalRecord() {
+    const { absoluteRange, dataSourceId, queryText } = this.props;
+
+    const shouldShowPagination = queryText.indexOf('|') === -1;
+
+    Promise.resolve()
+      .then(() => {
+        return shouldShowPagination
+          ? tsdb.getTotalRecord(dataSourceId, absoluteRange.from, absoluteRange.to, queryText)
+          : Promise.resolve(1);
+      })
+      .then((totalRecords) => {
+        let totalPage = Math.floor(totalRecords / 100);
+        if (totalRecords % 100 !== 0) {
+          totalPage += 1;
+        }
+        let state = {
+          ...this.state,
+          numberOfPages: totalPage,
+          totalRecords,
+          shouldShowPagination,
+          currentPage: 1,
+        };
+        this.setState(state);
+      })
+      .catch(() => {});
+  }
+
+  loadPageData(toPage: number) {
+    const { absoluteRange, dataSourceId, queryText } = this.props;
+    const offset = (toPage - 1) * 100;
+    this.setState({ ...this.state, currentPage: toPage, isLoadingPagedData: true });
+    tsdb
+      .loadPagedData(dataSourceId, absoluteRange.from, absoluteRange.to, queryText, offset, 100)
+      .then((dataFrame) => {
+        this.setState({ ...this.state, pagedDataFrame: dataFrame, isLoadingPagedData: false });
+      })
+      .catch(() => {
+        this.setState({ ...this.state, isLoadingPagedData: false });
+      });
+  }
+
   // 渲染函数
   render() {
     const { dataFrame, absoluteRange, width } = this.props;
 
+    let frame = dataFrame;
+
+    // load histograms
     if (this.prevTimeRangeFrom !== absoluteRange.from || this.prevTimeRangeTo !== absoluteRange.to) {
       this.prevTimeRangeFrom = absoluteRange.from;
       this.prevTimeRangeTo = absoluteRange.to;
       this.histogramsStatus = HistogramsState.outdated;
+
+      this.loadTotalRecord();
     }
 
     this.loadHistograms();
 
+    if (this.state.currentPage !== 1) {
+      frame = this.state.pagedDataFrame;
+    }
+
     // 处理表格需要的数据
     let values: any[] = [];
-    let columns: string[] = _.map(dataFrame.fields, (f) => f.name);
+    let columns: string[] = _.map(frame.fields, (f) => f.name);
 
-    if (dataFrame.fields.length > 0) {
-      const fields = dataFrame.fields;
+    if (frame.fields.length > 0) {
+      const fields = frame.fields;
       const count = fields[0].values.length;
 
       for (let i = 0; i < count; ++i) {
@@ -403,65 +476,111 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
           </div>
         </div>
 
+        {/* 顶部Pagination */}
+        {this.state.shouldShowPagination ? (
+          <div className={this.styles.paginationContainer} style={{ marginBottom: '6px' }}>
+            <div className={this.styles.paginationInstruction}>
+              总共 <span className={this.styles.paginationInstructionHighlight}>{this.state.totalRecords} </span>
+              条记录，分 <span className={this.styles.paginationInstructionHighlight}>
+                {this.state.numberOfPages}
+              </span>{' '}
+              页显示，每页 <span className={this.styles.paginationInstructionHighlight}>100</span> 条
+            </div>
+            <Pagination
+              currentPage={this.state.currentPage}
+              numberOfPages={this.state.numberOfPages}
+              onNavigate={this.loadPageData.bind(this)}
+              hideWhenSinglePage={!this.state.shouldShowPagination}
+            />
+          </div>
+        ) : (
+          <></>
+        )}
+
         {/* 表格区域 */}
-        <div className={this.styles.tableContainer}>
-          {this.state.enhancedMode ? (
-            <table className={this.styles.table}>
-              <thead>
-                <tr>
-                  <th className={this.styles.snCell}>#</th>
-                  <th className={this.styles.timeCell}>日志时间</th>
-                  <th>日志数据</th>
-                </tr>
-              </thead>
-              <tbody>
-                {values.map((v, i) => (
-                  <React.Fragment key={v['logId'] || `${v['time']}-${i}`}>
-                    <tr onClick={this.toggle.bind(this, i)} title="点击展开或收起" style={{ cursor: 'pointer' }}>
-                      <td className={this.styles.snCell}>
-                        {i + 1}
-                        {statusBar(v['level'])}
-                      </td>
-                      <td className={this.styles.timeCell}>
-                        <Icon name={this.getIconName(i)}></Icon>
-                        {dateTimeParse(+v['time']).format('YYYY-MM-DD HH:mm:ss.SSS')}
-                      </td>
-                      <td>
-                        <div className={this.styles.logSummary}>
-                          {summaryView({ data: v, columnFilters: this.state.columnFilters })}
-                        </div>
-                      </td>
-                    </tr>
-                    {this.renderDetailView(i, v)}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <table className={this.styles.table}>
-              <thead>
-                <tr>
-                  {_.map(columns, (c, i) => (
-                    <th key={i}>{c}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {values.map((v, i) => (
-                  <tr key={i}>
-                    {_.map(columns, (c, j) => {
-                      return (
-                        <td key={`${i}-${j}`} className={`${_.isPlainObject(v[c]) ? '' : this.styles.noNewline}`}>
-                          {_.isPlainObject(v[c]) ? JSON.stringify(v[c], null, 2) : v[c]}
-                        </td>
-                      );
-                    })}
+        {this.state.isLoadingPagedData ? (
+          <LoadingPlaceholder text="分页数据加载中，请稍后..." className={this.styles.loadingContainer} />
+        ) : (
+          <div className={this.styles.tableContainer}>
+            {this.state.enhancedMode ? (
+              <table className={this.styles.table}>
+                <thead>
+                  <tr>
+                    <th className={this.styles.snCell}>#</th>
+                    <th className={this.styles.timeCell}>日志时间</th>
+                    <th>日志数据</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody>
+                  {values.map((v, i) => (
+                    <React.Fragment key={v['logId'] || `${v['time']}-${i}`}>
+                      <tr onClick={this.toggle.bind(this, i)} title="点击展开或收起" style={{ cursor: 'pointer' }}>
+                        <td className={this.styles.snCell}>
+                          {i + 1}
+                          {statusBar(v['level'])}
+                        </td>
+                        <td className={this.styles.timeCell}>
+                          <Icon name={this.getIconName(i)}></Icon>
+                          {dateTimeParse(+v['time']).format('YYYY-MM-DD HH:mm:ss.SSS')}
+                        </td>
+                        <td>
+                          <div className={this.styles.logSummary}>
+                            {summaryView({ data: v, columnFilters: this.state.columnFilters })}
+                          </div>
+                        </td>
+                      </tr>
+                      {this.renderDetailView(i, v)}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <table className={this.styles.table}>
+                <thead>
+                  <tr>
+                    {_.map(columns, (c, i) => (
+                      <th key={i}>{c}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {values.map((v, i) => (
+                    <tr key={i}>
+                      {_.map(columns, (c, j) => {
+                        return (
+                          <td key={`${i}-${j}`} className={`${_.isPlainObject(v[c]) ? '' : this.styles.noNewline}`}>
+                            {_.isPlainObject(v[c]) ? JSON.stringify(v[c], null, 2) : v[c]}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
+        {/* 底部Pagination */}
+        {this.state.shouldShowPagination && !this.state.isLoadingPagedData ? (
+          <div className={this.styles.paginationContainer} style={{ marginTop: '6px' }}>
+            <div className={this.styles.paginationInstruction}>
+              总共 <span className={this.styles.paginationInstructionHighlight}>{this.state.totalRecords} </span>
+              条记录，分 <span className={this.styles.paginationInstructionHighlight}>
+                {this.state.numberOfPages}
+              </span>{' '}
+              页显示，每页 <span className={this.styles.paginationInstructionHighlight}>100</span> 条
+            </div>
+            <Pagination
+              currentPage={this.state.currentPage}
+              numberOfPages={this.state.numberOfPages}
+              onNavigate={this.loadPageData.bind(this)}
+              hideWhenSinglePage={!this.state.shouldShowPagination}
+            />
+          </div>
+        ) : (
+          <></>
+        )}
       </div>
     );
   }
@@ -622,6 +741,23 @@ const getStyles = stylesFactory(() => {
 
     tableContainer: css`
       position: relative;
+    `,
+
+    paginationContainer: css`
+      height: 29px;
+    `,
+
+    paginationInstruction: css`
+      float: left;
+    `,
+
+    paginationInstructionHighlight: css`
+      color: rgb(51, 162, 229);
+    `,
+
+    loadingContainer: css`
+      text-align: center;
+      margin-top: 32px;
     `,
   };
 });

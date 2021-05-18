@@ -4,7 +4,7 @@
 
 import axios from 'axios';
 import _ from 'lodash';
-import { base64StringToArrowTable } from '@grafana/data';
+import { base64StringToArrowTable, MutableDataFrame, FieldType } from '@grafana/data';
 
 const moment = require('moment');
 
@@ -133,6 +133,118 @@ class TSDB {
     }
 
     return [];
+  }
+
+  async getTotalRecord(dataSourceId: number, from: number, to: number, queryText: string): Promise<number> {
+    // 去掉 "|" 之后的SQL语句
+    let query = queryText;
+
+    if (_.isString(query)) {
+      if (query.indexOf('|') !== -1) {
+        query = queryText.substring(0, queryText.indexOf('|'));
+      }
+
+      query += ' | select count(1) as count';
+
+      const requestData: any = {
+        Queries: [
+          {
+            queryType: 'query',
+            target: 'query',
+            refId: 'A',
+            datasourceId: dataSourceId,
+            queryText: query,
+            hide: false,
+          },
+        ],
+      };
+
+      requestData.From = moment(from).valueOf().toString();
+      requestData.To = moment(to).valueOf().toString();
+
+      const results = await this.query(requestData);
+
+      if (results.length > 0) {
+        return +results[0][0]['count'] || 0;
+      }
+    }
+    return 0;
+  }
+
+  async loadPagedData(
+    dataSourceId: number,
+    from: number,
+    to: number,
+    queryText: string,
+    offset: number,
+    maxLineNum: number
+  ): Promise<MutableDataFrame> {
+    // 去掉 "|" 之后的SQL语句
+    let query = queryText;
+    const refId = 'A';
+
+    if (_.isString(query)) {
+      if (query.indexOf('|') !== -1) {
+        query = queryText.substring(0, queryText.indexOf('|'));
+      }
+
+      const requestData: any = {
+        Queries: [
+          {
+            queryType: 'query',
+            target: 'query',
+            refId,
+            datasourceId: dataSourceId,
+            queryText: query,
+            offset,
+            maxLineNum,
+            hide: false,
+          },
+        ],
+      };
+
+      requestData.From = moment(from).valueOf().toString();
+      requestData.To = moment(to).valueOf().toString();
+
+      let response = await axios.post('/api/tsdb/query', requestData);
+
+      if (response?.data?.results[refId]?.dataframes?.length > 0) {
+        const table = base64StringToArrowTable(response.data.results[refId].dataframes[0]);
+        const fields = _.map(table.schema.fields, (o) => o.name);
+        const list = table.toArray();
+
+        const frame = new MutableDataFrame({
+          refId,
+          fields: _.map(fields, (propertyName) => {
+            const field: any = {
+              name: propertyName,
+              type: FieldType.string,
+            };
+            return field;
+          }),
+        });
+
+        for (let i = 0; i < list.length; ++i) {
+          const row = list[i];
+          const o: any = {};
+          _.forEach(fields, (f) => {
+            o[f] = row.get(f);
+          });
+          frame.add(o);
+        }
+        return frame;
+      }
+    }
+
+    // return empty frame
+    return this.getEmptyDataFrame();
+  }
+
+  getEmptyDataFrame(): MutableDataFrame {
+    return new MutableDataFrame({
+      refId: 'A',
+      fields: [],
+    });
   }
 }
 
