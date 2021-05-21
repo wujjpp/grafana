@@ -14,36 +14,36 @@ const styles = stylesFactory(() => {
       top: 0;
       left: 0;
       bottom: 0;
-      width: 2px;
-      background-color: rgb(142, 142, 142);
+      width: 40px;
+      border-left: 2px solid rgb(142, 142, 142);
     `,
 
     statusTrace: css`
-      background-color: rgb(110, 208, 224);
+      border-left-color: rgb(110, 208, 224);
     `,
 
     statusDebug: css`
       // background-color: rgb(31, 120, 193);
-      background-color: blue;
+      border-left-color: blue;
     `,
 
     statusInfo: css`
       // background-color: rgb(126, 178, 109);
-      background-color: green;
+      border-left-color: green;
     `,
 
     statusWarn: css`
       // background-color: rgb(236, 187, 19);
-      background-color: yellow;
+      border-left-color: yellow;
     `,
 
     statusError: css`
       // background-color: rgb(242, 73, 92);
-      background-color: red;
+      border-left-color: red;
     `,
 
     statusFatal: css`
-      background-color: purple;
+      border-left-color: purple;
     `,
   };
 })();
@@ -56,6 +56,7 @@ const StatusBar = (status: string): JSX.Element => {
       } ${status === 'INFO' ? styles.statusInfo : ''} ${status === 'WARN' ? styles.statusWarn : ''} ${
         status === 'ERROR' ? styles.statusError : ''
       } ${status === 'FATAL' ? styles.statusFatal : ''}`}
+      title={status}
     ></div>
   );
 };
