@@ -205,11 +205,23 @@ export default class TableView extends React.Component<Props, State> {
     }
   }
 
+  sortObjectKeys(keys: string[]): string[] {
+    const shortKeys = _.chain(keys)
+      .filter((key) => key.indexOf('.') === -1)
+      .sort()
+      .value();
+    const longKeys = _.chain(keys)
+      .filter((key) => key.indexOf('.') !== -1)
+      .sort()
+      .value();
+    return shortKeys.concat(longKeys);
+  }
+
   render() {
     const { entity, columnFilters, onToggleFilter, valueFilters } = this.props;
 
     let flattenEntity = utils.flattenObject(entity);
-    let keys = _.chain(flattenEntity).keys().sort().value();
+    let keys = this.sortObjectKeys(_.keys(flattenEntity));
 
     return (
       <table className={styles.tableView}>

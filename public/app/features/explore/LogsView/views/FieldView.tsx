@@ -50,6 +50,34 @@ const styles = stylesFactory(() => {
     statusError: css`
       color: red;
     `,
+
+    colorTrace: css`
+      color: rgb(110, 208, 224);
+    `,
+
+    colorDebug: css`
+      color: blue;
+    `,
+
+    colorInfo: css`
+      color: green;
+    `,
+
+    colorWarn: css`
+      color: yellow;
+    `,
+
+    colorError: css`
+      color: red;
+    `,
+
+    colorFatal: css`
+      color: purple;
+    `,
+
+    colorBlue: css`
+      color: rgb(51, 162, 229);
+    `,
   };
 })();
 
@@ -67,11 +95,46 @@ interface State {
 }
 
 // 获取栏位样式
-const getFieldClassName = (key: string) => {
+const getFieldClassName = (key: string, value: any): string => {
+  let className = '';
   if (key === 'fields.error.message') {
-    return styles.statusError;
+    className = styles.statusError;
+  } else if (key === 'level') {
+    switch (value) {
+      case 'TRACE':
+        className = styles.colorTrace;
+        break;
+      case 'DEBUG':
+        className = styles.colorDebug;
+        break;
+      case 'INFO':
+        className = styles.colorInfo;
+        break;
+      case 'WARN':
+        className = styles.colorWarn;
+        break;
+      case 'ERROR':
+        className = styles.colorError;
+        break;
+      case 'FATAL':
+        className = styles.colorFatal;
+        break;
+    }
+  } else if (
+    key === 'appName' ||
+    key === 'category' ||
+    key === 'fields.eventType' ||
+    key === 'fields.requestContext.query' ||
+    key === 'fields.requestContext.body' ||
+    key === 'fields.requestContext.path' ||
+    key === 'fields.requestInfo.url' ||
+    key === 'fields.requestInfo.body' ||
+    key === 'fields.requestInfo.query'
+  ) {
+    className = styles.colorBlue;
   }
-  return '';
+
+  return className;
 };
 
 export default class FieldView extends React.PureComponent<Props, State> {
@@ -174,7 +237,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
               ref={(container) => {
                 this.container = container;
               }}
-              className={getFieldClassName(fieldName)}
+              className={getFieldClassName(fieldName, value)}
               dangerouslySetInnerHTML={{ __html: this.formatField(value) }}
             ></div>
             <div
