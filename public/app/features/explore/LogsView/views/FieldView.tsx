@@ -120,17 +120,7 @@ const getFieldClassName = (key: string, value: any): string => {
         className = styles.colorFatal;
         break;
     }
-  } else if (
-    key === 'appName' ||
-    key === 'category' ||
-    key === 'fields.eventType' ||
-    key === 'fields.requestContext.query' ||
-    key === 'fields.requestContext.body' ||
-    key === 'fields.requestContext.path' ||
-    key === 'fields.requestInfo.url' ||
-    key === 'fields.requestInfo.body' ||
-    key === 'fields.requestInfo.query'
-  ) {
+  } else if (key === 'appName' || key === 'category') {
     className = styles.colorBlue;
   }
 

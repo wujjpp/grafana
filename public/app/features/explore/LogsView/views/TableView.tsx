@@ -65,6 +65,10 @@ const styles = stylesFactory(() => {
     statusError: css`
       color: red;
     `,
+
+    colorBlue: css`
+      color: rgb(51, 162, 229);
+    `,
   };
 })();
 
@@ -72,6 +76,16 @@ const styles = stylesFactory(() => {
 const getFieldClassName = (key: string) => {
   if (key === 'fields.error.code' || key === 'fields.error.message' || key === 'fields.error.stack') {
     return styles.statusError;
+  } else if (
+    key === 'fields.eventType' ||
+    key === 'fields.requestContext.query' ||
+    key === 'fields.requestContext.body' ||
+    key === 'fields.requestContext.path' ||
+    key === 'fields.requestInfo.url' ||
+    key === 'fields.requestInfo.body' ||
+    key === 'fields.requestInfo.query'
+  ) {
+    return styles.colorBlue;
   }
   return '';
 };
