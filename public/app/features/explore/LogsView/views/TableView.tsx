@@ -290,6 +290,7 @@ export default class TableView extends React.Component<Props, State> {
               ) : (
                 <FieldView
                   onChangeValueSearchFilter={this.changeValueSearchFilter.bind(this)}
+                  fieldName={key}
                   value={flattenEntity[key]}
                   valueFilters={valueFilters}
                   isInJsonMode={this.state[key] && this.state[key].isInJsonMode}

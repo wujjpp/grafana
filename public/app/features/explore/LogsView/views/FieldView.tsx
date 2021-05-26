@@ -46,12 +46,17 @@ const styles = stylesFactory(() => {
       // right: 0;
       // bottom: 0;
     `,
+
+    statusError: css`
+      color: red;
+    `,
   };
 })();
 
 interface Props {
   isInJsonMode: boolean;
   isInSqlMode: boolean;
+  fieldName: string;
   value: any;
   valueFilters: string[];
   onChangeValueSearchFilter: (value: string) => void;
@@ -60,6 +65,14 @@ interface Props {
 interface State {
   expanded: boolean;
 }
+
+// 获取栏位样式
+const getFieldClassName = (key: string) => {
+  if (key === 'fields.error.message') {
+    return styles.statusError;
+  }
+  return '';
+};
 
 export default class FieldView extends React.PureComponent<Props, State> {
   state: State = {
@@ -139,7 +152,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { value, valueFilters, isInJsonMode, isInSqlMode } = this.props;
+    const { value, valueFilters, isInJsonMode, isInSqlMode, fieldName } = this.props;
 
     return (
       <td className={styles.td}>
@@ -161,6 +174,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
               ref={(container) => {
                 this.container = container;
               }}
+              className={getFieldClassName(fieldName)}
               dangerouslySetInnerHTML={{ __html: this.formatField(value) }}
             ></div>
             <div
