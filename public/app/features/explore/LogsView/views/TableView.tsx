@@ -70,7 +70,7 @@ const styles = stylesFactory(() => {
 
 // 获取栏位样式
 const getFieldClassName = (key: string) => {
-  if (key === 'fields.error.stack') {
+  if (key === 'fields.error.code' || key === 'fields.error.message' || key === 'fields.error.stack') {
     return styles.statusError;
   }
   return '';
