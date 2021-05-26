@@ -53,26 +53,32 @@ const styles = stylesFactory(() => {
 
     colorTrace: css`
       color: rgb(110, 208, 224);
+      font-weight: 700;
     `,
 
     colorDebug: css`
       color: blue;
+      font-weight: 700;
     `,
 
     colorInfo: css`
       color: green;
+      font-weight: 700;
     `,
 
     colorWarn: css`
       color: yellow;
+      font-weight: 700;
     `,
 
     colorError: css`
       color: red;
+      font-weight: 700;
     `,
 
     colorFatal: css`
       color: purple;
+      font-weight: 700;
     `,
 
     colorBlue: css`
@@ -120,7 +126,7 @@ const getFieldClassName = (key: string, value: any): string => {
         className = styles.colorFatal;
         break;
     }
-  } else if (key === 'appName' || key === 'category') {
+  } else if (key === 'appName' || key === 'category' || key === 'fields.eventType') {
     className = styles.colorBlue;
   }
 

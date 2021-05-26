@@ -73,11 +73,12 @@ const styles = stylesFactory(() => {
 })();
 
 // 获取栏位样式
-const getFieldClassName = (key: string) => {
+const getFieldClassName = (key: string): string => {
   if (key === 'fields.error.code' || key === 'fields.error.message' || key === 'fields.error.stack') {
     return styles.statusError;
   } else if (
     key === 'fields.eventType' ||
+    key === 'fields.requestContext.userId' ||
     key === 'fields.requestContext.query' ||
     key === 'fields.requestContext.body' ||
     key === 'fields.requestContext.path' ||
