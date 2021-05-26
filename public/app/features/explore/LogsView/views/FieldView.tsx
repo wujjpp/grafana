@@ -10,6 +10,8 @@ import JsonView from './JsonView';
 import SqlView from './SqlView';
 import utils from '../utils';
 
+const moment = require('moment');
+
 require('./global.css');
 
 const styles = stylesFactory(() => {
@@ -142,7 +144,11 @@ export default class FieldView extends React.PureComponent<Props, State> {
   toggleBtn: HTMLElement | null;
 
   // 格式化内容，遇到"回车"换成<br />
-  formatField(v: any) {
+  formatField(fieldName: string, v: any) {
+    if (fieldName === 'time' && _.isString(v) && v.length === 13) {
+      return moment(+v).format('YYYY-MM-DD HH:mm:ss.SSS') + `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(${v})`;
+    }
+
     // 处理换行
     if (_.isString(v) && v.indexOf('\n') !== 0) {
       v = v.replace(/\n/gi, '<br />');
@@ -234,7 +240,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
                 this.container = container;
               }}
               className={getFieldClassName(fieldName, value)}
-              dangerouslySetInnerHTML={{ __html: this.formatField(value) }}
+              dangerouslySetInnerHTML={{ __html: this.formatField(fieldName, value) }}
             ></div>
             <div
               ref={(btn) => {
