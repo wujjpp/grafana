@@ -21,6 +21,7 @@ import { SearchFilterItem } from './types';
 import SearchFilterView from './views/SearchFilterView';
 import ValueFilterView from './views/ValueFilterView';
 import ColumnFilterView from './views/ColumnFilterView';
+import DiagnosticsView from './views/DiagnosticsView';
 
 interface Props {
   exploreId: ExploreId;
@@ -47,6 +48,15 @@ interface State {
 
   pagedDataFrame: MutableDataFrame;
   isLoadingPagedData: boolean;
+
+  showDiagnostics: boolean;
+
+  selectedLog: {
+    path: string;
+    headers: any;
+    query: any;
+    data: any;
+  };
 }
 
 enum HistogramsState {
@@ -74,6 +84,15 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
 
     pagedDataFrame: tsdb.getEmptyDataFrame(),
     isLoadingPagedData: false,
+
+    showDiagnostics: false,
+
+    selectedLog: {
+      path: '',
+      headers: {},
+      query: {},
+      data: {},
+    },
   };
 
   histogramsStatus = HistogramsState.outdated;
@@ -362,6 +381,37 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
       });
   }
 
+  canPlay(v: any): boolean {
+    if (v?.category === 'http' && v?.appName === 'nodejs-qcc-backend-data' && v?.fields?.requestContext?.path) {
+      return true;
+    }
+    return false;
+  }
+
+  showDiagnosticsPanel(v: any, e: any) {
+    e.stopPropagation();
+
+    let path = v?.fields?.requestContext?.path;
+    let query = v?.fields?.requestContext?.query;
+    let headers = v?.fields?.requestContext?.headers;
+    let data = v?.fields?.requestContext?.body;
+
+    this.setState({
+      ...this.state,
+      showDiagnostics: true,
+      selectedLog: {
+        path,
+        query,
+        headers,
+        data,
+      },
+    });
+  }
+
+  closeDiagnosticsPanel() {
+    this.setState({ ...this.state, showDiagnostics: false });
+  }
+
   // 渲染函数
   render() {
     const { dataFrame, absoluteRange, width } = this.props;
@@ -476,8 +526,19 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
           </div>
         </div>
 
+        {/* Request & Response Viewer */}
+        {this.state.showDiagnostics && (
+          <DiagnosticsView
+            onClose={this.closeDiagnosticsPanel.bind(this)}
+            path={this.state.selectedLog.path}
+            headers={this.state.selectedLog.headers}
+            query={this.state.selectedLog.query}
+            data={this.state.selectedLog.data}
+          ></DiagnosticsView>
+        )}
+
         {/* 顶部Pagination */}
-        {this.state.shouldShowPagination ? (
+        {this.state.shouldShowPagination && (
           <div className={this.styles.paginationContainer} style={{ marginBottom: '6px' }}>
             <div className={this.styles.paginationInstruction}>
               总共 <span className={this.styles.paginationInstructionHighlight}>{this.state.totalRecords} </span>
@@ -493,8 +554,6 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
               hideWhenSinglePage={!this.state.shouldShowPagination}
             />
           </div>
-        ) : (
-          <></>
         )}
 
         {/* 表格区域 */}
@@ -522,6 +581,17 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
                         <td className={this.styles.timeCell}>
                           <Icon name={this.getIconName(i)}></Icon>
                           {dateTimeParse(+v['time']).format('YYYY-MM-DD HH:mm:ss.SSS')}
+
+                          {/* 播放按钮 */}
+                          {this.canPlay(v) && (
+                            <div
+                              className={this.styles.playItem}
+                              title="诊断接口"
+                              onClick={this.showDiagnosticsPanel.bind(this, v)}
+                            >
+                              <Icon name="bug"></Icon>
+                            </div>
+                          )}
                         </td>
                         <td>
                           <div className={this.styles.logSummary}>
@@ -680,7 +750,7 @@ const getStyles = stylesFactory(() => {
     `,
 
     timeCell: css`
-      width: 200px;
+      width: 210px;
       user-select: none;
       position: relative;
     `,
@@ -759,6 +829,16 @@ const getStyles = stylesFactory(() => {
     loadingContainer: css`
       text-align: center;
       margin-top: 32px;
+    `,
+
+    playItem: css`
+      display: inline-block;
+      margin-left: 6px;
+      cursor: pointer;
+      color: rgb(179, 179, 179);
+      :hover {
+        color: rgb(255, 255, 255);
+      }
     `,
   };
 });
