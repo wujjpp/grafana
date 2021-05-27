@@ -4,18 +4,7 @@
 
 import React from 'react';
 import _ from 'lodash';
-import {
-  stylesFactory,
-  Drawer,
-  Button,
-  TabsBar,
-  Tab,
-  TabContent,
-  Field,
-  Input,
-  CustomScrollbar,
-  Alert,
-} from '@grafana/ui';
+import { stylesFactory, Drawer, Button, TabsBar, Tab, TabContent, Field, CustomScrollbar, Alert } from '@grafana/ui';
 import { css } from 'emotion';
 import JsonView from './JsonView';
 import axios from 'axios';
@@ -23,7 +12,7 @@ import axios from 'axios';
 interface Props {
   onClose: () => void;
   path: string;
-  method?: string;
+  method: string;
   headers: any;
   query: any;
   data: any;
@@ -42,6 +31,7 @@ interface State {
   responseBody?: any;
   isRequesting: boolean;
   errorMessage: string;
+  responseTime: number;
 }
 
 const DEFAULT_HOST = 'http://10.0.4.180:9600';
@@ -64,6 +54,7 @@ export default class DiagnosticsView extends React.Component<Props, State> {
     ],
     isRequesting: false,
     errorMessage: '',
+    responseTime: 0,
   };
 
   setTabActive(index: number): void {
@@ -76,15 +67,26 @@ export default class DiagnosticsView extends React.Component<Props, State> {
   }
 
   test() {
-    const { path, query, headers } = this.props;
+    const { path, method, query, headers, data } = this.props;
 
     this.setState({ ...this.state, isRequesting: true });
 
-    console.log(query);
+    let m = (method || 'GET').toUpperCase();
 
-    axios
-      .get(`${DEFAULT_HOST}${path}`, { headers: JSON.parse(headers), params: JSON.parse(query) })
+    let start = new Date().getTime();
+    let end = new Date().getTime();
+    Promise.resolve()
+      .then(() => {
+        return m === 'GET'
+          ? axios.get(`${DEFAULT_HOST}${path}`, { headers: JSON.parse(headers), params: JSON.parse(query) })
+          : axios.post(`${DEFAULT_HOST}${path}`, {
+              headers: JSON.parse(headers || '{}'),
+              params: JSON.parse(query || '{}'),
+              data: JSON.parse(data || '{}'),
+            });
+      })
       .then((response) => {
+        end = new Date().getTime();
         const data = response.data;
         const status = response.status;
         const responseHeaders = response.headers;
@@ -100,6 +102,7 @@ export default class DiagnosticsView extends React.Component<Props, State> {
         });
       })
       .catch((error) => {
+        end = new Date().getTime();
         if (error.response) {
           const data = error.response.data;
           const status = error.response.status;
@@ -142,12 +145,12 @@ export default class DiagnosticsView extends React.Component<Props, State> {
         }
       })
       .finally(() => {
-        this.setState({ ...this.state, isRequesting: false });
+        this.setState({ ...this.state, isRequesting: false, responseTime: end - start });
       });
   }
 
   render() {
-    const { onClose, path, headers, query, data } = this.props;
+    const { onClose, path, headers, query, data, method } = this.props;
 
     return (
       <Drawer width="40%" scrollableContent={false} closeOnMaskClick={true} onClose={onClose}>
@@ -173,9 +176,16 @@ export default class DiagnosticsView extends React.Component<Props, State> {
                 <TabContent>
                   {this.state.tabs[0].active && (
                     <div className={this.styles.formContainer}>
-                      <Field label="URL">
-                        <Input value={DEFAULT_HOST + path} onChange={() => {}} />
-                      </Field>
+                      <div className={this.styles.fieldContainer}>
+                        <span>Url</span>&nbsp;:&nbsp;&nbsp;
+                        <span className={this.styles.colorNormal}>{DEFAULT_HOST + path}</span>
+                      </div>
+
+                      <div className={`${this.styles.fieldContainer} ${this.styles.paddingTop0}`}>
+                        <span>Method</span>&nbsp;:&nbsp;&nbsp;
+                        <span className={this.styles.colorNormal}>{(method || '').toUpperCase()}</span>
+                      </div>
+
                       {query && (
                         <Field label="Query">
                           <div className={this.styles.jsonViewContainer}>
@@ -201,8 +211,8 @@ export default class DiagnosticsView extends React.Component<Props, State> {
                   )}
                   {this.state.tabs[1].active && (
                     <div className={this.styles.formContainer}>
-                      <div className={this.styles.httpStatusContainer}>
-                        <span>Http Status Code</span>&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;
+                      <div className={this.styles.fieldContainer}>
+                        <span>Http Status Code</span>&nbsp;:&nbsp;&nbsp;
                         <span
                           className={
                             this.state.responseStatus === 200 ? this.styles.colorSuccess : this.styles.colorError
@@ -210,6 +220,13 @@ export default class DiagnosticsView extends React.Component<Props, State> {
                         >
                           {this.state.responseStatus}
                         </span>
+                      </div>
+
+                      <div className={`${this.styles.fieldContainer} ${this.styles.paddingTop0}`}>
+                        <span>Response Time</span>&nbsp;:&nbsp;&nbsp;
+                        <span
+                          className={this.state.responseTime <= 200 ? this.styles.colorSuccess : this.styles.colorError}
+                        >{`${this.state.responseTime} ms`}</span>
                       </div>
 
                       <Field label="Response Body">
@@ -329,9 +346,16 @@ const getStyles = stylesFactory(() => {
       border: 1px solid #2c3235;
     `,
 
-    httpStatusContainer: css`
+    fieldContainer: css`
       padding-top: 10px;
       padding-bottom: 10px;
+      font-size: 12px;
+      padding-left: 2px;
+      color: #9fa7b3;
+    `,
+
+    colorNormal: css`
+      color: rgb(199, 208, 217);
     `,
 
     colorSuccess: css`
@@ -342,6 +366,10 @@ const getStyles = stylesFactory(() => {
     colorError: css`
       color: red;
       font-weight: 700;
+    `,
+
+    paddingTop0: css`
+      padding-top: 0;
     `,
   };
 });

@@ -53,6 +53,7 @@ interface State {
 
   selectedLog: {
     path: string;
+    method: string;
     headers: any;
     query: any;
     data: any;
@@ -89,6 +90,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
 
     selectedLog: {
       path: '',
+      method: 'GET',
       headers: {},
       query: {},
       data: {},
@@ -395,12 +397,14 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     let query = v?.fields?.requestContext?.query;
     let headers = v?.fields?.requestContext?.headers;
     let data = v?.fields?.requestContext?.body;
+    let method = v?.fields?.http?.method;
 
     this.setState({
       ...this.state,
       showDiagnostics: true,
       selectedLog: {
         path,
+        method: method || 'GET',
         query,
         headers,
         data,
@@ -534,6 +538,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
             headers={this.state.selectedLog.headers}
             query={this.state.selectedLog.query}
             data={this.state.selectedLog.data}
+            method={this.state.selectedLog.method}
           ></DiagnosticsView>
         )}
 
