@@ -9,6 +9,7 @@ import _ from 'lodash';
 import JsonView from './JsonView';
 import SqlView from './SqlView';
 import utils from '../utils';
+import copy from 'copy-to-clipboard';
 
 const moment = require('moment');
 
@@ -30,6 +31,26 @@ const styles = stylesFactory(() => {
     contentContainer: css`
       max-height: 360px;
       overflow: hidden;
+    `,
+
+    toolbarContainer: css`
+      position: absolute;
+      right: 0;
+      bottom: 0;
+    `,
+
+    toolbarItem: css`
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      color: rgb(179, 179, 179);
+      :hover {
+        color: rgb(255, 255, 255);
+      }
+    `,
+
+    toolbarItemActive: css`
+      color: rgb(51, 162, 229) !important;
     `,
 
     toggleContainer: css`
@@ -128,12 +149,27 @@ const getFieldClassName = (key: string, value: any): string => {
         className = styles.colorFatal;
         break;
     }
-  } else if (key === 'appName' || key === 'category' || key === 'fields.eventType') {
+  } else if (
+    key === 'appName' ||
+    key === 'category' ||
+    key === 'fields.eventType' ||
+    key === 'fields.requestContext.originalUrl2' ||
+    key === 'fields.requestInfo.urlFull'
+  ) {
     className = styles.colorBlue;
   }
 
   return className;
 };
+
+const SHOULD_SHOW_ORIGIN_CONTENT_FIELDS = [
+  'fields.requestContext.originalUrl',
+  'fields.requestContext.originalUrl2',
+  'fields.requestContext.path',
+  'fields.requestContext.referer',
+  'fields.requestInfo.url',
+  'fields.requestInfo.urlFull',
+];
 
 export default class FieldView extends React.PureComponent<Props, State> {
   state: State = {
@@ -216,6 +252,17 @@ export default class FieldView extends React.PureComponent<Props, State> {
     }
   }
 
+  copyValue(value: string, event: any): void {
+    copy(value);
+    console.log(event);
+
+    $(event.target.parentElement).addClass(styles.toolbarItemActive);
+
+    setTimeout(() => {
+      $(event.target.parentElement).removeClass(styles.toolbarItemActive);
+    }, 800);
+  }
+
   render() {
     const { value, valueFilters, isInJsonMode, isInSqlMode, fieldName } = this.props;
 
@@ -235,13 +282,32 @@ export default class FieldView extends React.PureComponent<Props, State> {
           </div>
         ) : (
           <div className={styles.expandedContainer}>
-            <div
-              ref={(container) => {
-                this.container = container;
-              }}
-              className={getFieldClassName(fieldName, value)}
-              dangerouslySetInnerHTML={{ __html: this.formatField(fieldName, value) }}
-            ></div>
+            {/* URL类的栏位不需要以HTML方式展示 */}
+            {_.includes(SHOULD_SHOW_ORIGIN_CONTENT_FIELDS, fieldName) ? (
+              <div
+                ref={(container) => {
+                  this.container = container;
+                }}
+                className={getFieldClassName(fieldName, value)}
+              >
+                {value}
+              </div>
+            ) : (
+              <div
+                ref={(container) => {
+                  this.container = container;
+                }}
+                className={getFieldClassName(fieldName, value)}
+                dangerouslySetInnerHTML={{ __html: this.formatField(fieldName, value) }}
+              ></div>
+            )}
+
+            <div className={styles.toolbarContainer}>
+              <div className={styles.toolbarItem}>
+                <Icon name="copy" title="复制内容" onClick={this.copyValue.bind(this, value)}></Icon>
+              </div>
+            </div>
+
             <div
               ref={(btn) => {
                 this.toggleBtn = btn;

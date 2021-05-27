@@ -13,6 +13,7 @@ import FieldView from './FieldView';
 import { AbsoluteTimeRange } from '@grafana/data';
 import tsdb from '../tsdb';
 import { SearchFilterItem } from '../types';
+import qs from 'querystring';
 
 const styles = stylesFactory(() => {
   return {
@@ -35,7 +36,7 @@ const styles = stylesFactory(() => {
     `,
 
     iconCell: css`
-      width: 28px;
+      width: 22px;
       text-align: center;
       cursor: pointer;
       color: rgb(179, 179, 179);
@@ -77,11 +78,14 @@ const getFieldClassName = (key: string): string => {
   if (key === 'fields.error.code' || key === 'fields.error.message' || key === 'fields.error.stack') {
     return styles.statusError;
   } else if (
+    key === 'fields.requestContext.requestId' ||
     key === 'fields.requestContext.userId' ||
     key === 'fields.requestContext.query' ||
     key === 'fields.requestContext.body' ||
     key === 'fields.requestContext.path' ||
+    key === 'fields.requestContext.originalUrl2' ||
     key === 'fields.requestInfo.url' ||
+    key === 'fields.requestInfo.urlFull' ||
     key === 'fields.requestInfo.body' ||
     key === 'fields.requestInfo.query'
   ) {
@@ -228,6 +232,7 @@ export default class TableView extends React.Component<Props, State> {
       .filter((key) => key.indexOf('.') !== -1)
       .sort()
       .value();
+
     return shortKeys.concat(longKeys);
   }
 
@@ -235,6 +240,19 @@ export default class TableView extends React.Component<Props, State> {
     const { entity, columnFilters, onToggleFilter, valueFilters } = this.props;
 
     let flattenEntity = utils.flattenObject(entity);
+
+    let path = flattenEntity['fields.requestContext.path'];
+    let query = flattenEntity['fields.requestContext.query'];
+    if (path && query) {
+      flattenEntity['fields.requestContext.originalUrl2'] = `${path}?${qs.stringify(JSON.parse(query))}`;
+    }
+
+    let apiRequestUrl = flattenEntity['fields.requestInfo.url'];
+    let apiRequestQuery = flattenEntity['fields.requestInfo.query'];
+    if (apiRequestUrl && apiRequestQuery) {
+      flattenEntity['fields.requestInfo.urlFull'] = `${apiRequestUrl}?${qs.stringify(JSON.parse(apiRequestQuery))}`;
+    }
+
     let keys = this.sortObjectKeys(_.keys(flattenEntity));
 
     return (
