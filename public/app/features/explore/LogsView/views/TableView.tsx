@@ -225,11 +225,11 @@ export default class TableView extends React.Component<Props, State> {
 
   sortObjectKeys(keys: string[]): string[] {
     const shortKeys = _.chain(keys)
-      .filter((key) => key.indexOf('.') === -1)
+      .filter((key) => key.indexOf('.') === -1 || key === 'fields.requestContext.requestId')
       .sort()
       .value();
     const longKeys = _.chain(keys)
-      .filter((key) => key.indexOf('.') !== -1)
+      .filter((key) => key.indexOf('.') !== -1 && key !== 'fields.requestContext.requestId')
       .sort()
       .value();
 
