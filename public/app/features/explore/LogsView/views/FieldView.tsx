@@ -113,6 +113,12 @@ const styles = stylesFactory(() => {
     colorBlue: css`
       color: rgb(51, 162, 229);
     `,
+
+    link: css`
+      :hover {
+        color: red;
+      }
+    `,
   };
 })();
 
@@ -187,6 +193,11 @@ export default class FieldView extends React.PureComponent<Props, State> {
 
   // 格式化内容，遇到"回车"换成<br />
   formatField(fieldName: string, v: any) {
+    if (fieldName === 'fields.requestContext.requestId') {
+      const target = `/explore?orgId=1&left=%5B"now-1h","now","QCC%20Log%20Backend%20Datasource",%7B"queryText":"*%20and%20fields.requestContext.requestId:${v}"%7D%5D`;
+      return `${v}<a href=${target} target="_blank" title="点击查看所有关联日志" class="${styles.link}">【点击查看关联日志】</a>`;
+    }
+
     if (fieldName === 'time' && _.isString(v) && v.length === 13) {
       return moment(+v).format('YYYY-MM-DD HH:mm:ss.SSS') + `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(${v})`;
     }
