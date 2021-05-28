@@ -397,7 +397,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
     let query = v?.fields?.requestContext?.query;
     let headers = v?.fields?.requestContext?.headers;
     let data = v?.fields?.requestContext?.body;
-    let method = v?.fields?.http?.method;
+    let method = v?.fields?.requestContext?.method;
 
     this.setState({
       ...this.state,
