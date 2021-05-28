@@ -69,6 +69,12 @@ export default class DiagnosticsView extends React.Component<Props, State> {
   test() {
     const { path, method, query, headers, data } = this.props;
 
+    const filteredHeader = JSON.parse(headers || {});
+
+    _.forEach(['user-agent', 'host', 'connection', 'content-length', 'content-type'], (key) => {
+      delete filteredHeader[key];
+    });
+
     this.setState({ ...this.state, isRequesting: true });
 
     let m = (method || 'GET').toUpperCase();
@@ -78,9 +84,9 @@ export default class DiagnosticsView extends React.Component<Props, State> {
     Promise.resolve()
       .then(() => {
         return m === 'GET'
-          ? axios.get(`${DEFAULT_HOST}${path}`, { headers: JSON.parse(headers), params: JSON.parse(query) })
+          ? axios.get(`${DEFAULT_HOST}${path}`, { headers: filteredHeader, params: JSON.parse(query || {}) })
           : axios.post(`${DEFAULT_HOST}${path}`, JSON.parse(data || '{}'), {
-              headers: JSON.parse(headers || '{}'),
+              headers: filteredHeader,
               params: JSON.parse(query || '{}'),
             });
       })
@@ -341,7 +347,7 @@ const getStyles = stylesFactory(() => {
 
     jsonViewContainer: css`
       background-color: #0b0c0e;
-      padding: 8px;
+      padding: 6px;
       border: 1px solid #2c3235;
       position: relative;
     `,

@@ -33,10 +33,14 @@ const styles = stylesFactory(() => {
       overflow: hidden;
     `,
 
+    fieldContextContainer: css`
+      padding-right: 20px;
+    `,
+
     toolbarContainer: css`
       position: absolute;
       right: 0;
-      bottom: 0;
+      top: 0;
     `,
 
     toolbarItem: css`
@@ -57,6 +61,8 @@ const styles = stylesFactory(() => {
       text-align: center;
       cursor: pointer;
       color: rgb(179, 179, 179);
+      background-color: #202226;
+      padding-right: 20px;
 
       :hover {
         color: rgb(255, 255, 255);
@@ -234,22 +240,30 @@ export default class FieldView extends React.PureComponent<Props, State> {
     }
   }
 
-  toggle() {
-    this.setState({ ...this.state, expanded: !this.state.expanded });
+  componentDidUpdate() {
+    const { isInJsonMode, isInSqlMode } = this.props;
 
-    if (this.container) {
-      if (this.state.expanded) {
-        $(this.container).addClass(styles.contentContainer);
-        if (this.toggleBtn) {
-          $(this.toggleBtn).addClass(styles.flow);
-        }
-      } else {
-        $(this.container).removeClass(styles.contentContainer);
-        if (this.toggleBtn) {
-          $(this.toggleBtn).removeClass(styles.flow);
+    if (!isInJsonMode && !isInSqlMode) {
+      if (this.container) {
+        if (this.container) {
+          if (!this.state.expanded) {
+            $(this.container).addClass(styles.contentContainer);
+            if (this.toggleBtn) {
+              $(this.toggleBtn).addClass(styles.flow);
+            }
+          } else {
+            $(this.container).removeClass(styles.contentContainer);
+            if (this.toggleBtn) {
+              $(this.toggleBtn).removeClass(styles.flow);
+            }
+          }
         }
       }
     }
+  }
+
+  toggle() {
+    this.setState({ ...this.state, expanded: !this.state.expanded });
   }
 
   copyValue(value: string, event: any): void {
@@ -287,7 +301,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
                 ref={(container) => {
                   this.container = container;
                 }}
-                className={getFieldClassName(fieldName, value)}
+                className={`${getFieldClassName(fieldName, value)} ${styles.fieldContextContainer}`}
               >
                 {value}
               </div>
@@ -296,7 +310,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
                 ref={(container) => {
                   this.container = container;
                 }}
-                className={getFieldClassName(fieldName, value)}
+                className={`${getFieldClassName(fieldName, value)} ${styles.fieldContextContainer}`}
                 dangerouslySetInnerHTML={{ __html: this.formatField(fieldName, value) }}
               ></div>
             )}

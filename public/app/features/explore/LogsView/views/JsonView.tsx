@@ -202,8 +202,8 @@ const getStyles = stylesFactory(() => {
 
     toolbarContainer: css`
       position: absolute;
-      right: 8px;
-      top: 8px;
+      right: 0;
+      top: 0;
     `,
 
     toolbarItem: css`

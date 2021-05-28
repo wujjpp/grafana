@@ -274,6 +274,17 @@ export default class TableView extends React.Component<Props, State> {
               {/* 工具按钮二 */}
               <td
                 className={`${styles.td} ${styles.iconCell} ${
+                  _.some(this.props.searchFilters, (o) => o.name === key) ? styles.iconCellActive : ''
+                }`}
+                onClick={this.changeSearchFilter.bind(this, { fieldName: key, value: flattenEntity[key] })}
+                title="在筛选条件添加/移除该筛选条件"
+              >
+                <Icon name="filter"></Icon>
+              </td>
+
+              {/* 工具按钮三 */}
+              <td
+                className={`${styles.td} ${styles.iconCell} ${
                   _.includes(columnFilters, key) ? styles.iconCellActive : ''
                 }`}
                 onClick={() => {
@@ -282,17 +293,6 @@ export default class TableView extends React.Component<Props, State> {
                 title="在表格中添加/移除该栏位"
               >
                 <Icon name="eye"></Icon>
-              </td>
-
-              {/* 工具按钮三 */}
-              <td
-                className={`${styles.td} ${styles.iconCell} ${
-                  _.some(this.props.searchFilters, (o) => o.name === key) ? styles.iconCellActive : ''
-                }`}
-                onClick={this.changeSearchFilter.bind(this, { fieldName: key, value: flattenEntity[key] })}
-                title="在筛选条件添加/移除该筛选条件"
-              >
-                <Icon name="filter"></Icon>
               </td>
 
               {/* 工具按钮四 */}
@@ -317,7 +317,10 @@ export default class TableView extends React.Component<Props, State> {
                 <Icon name="wrap-text"></Icon>
               </td>
 
+              {/* 属性名 */}
               <td className={`${styles.td} ${styles.fieldNameCell} ${getFieldClassName(key)}`}>{key}</td>
+
+              {/* 属性值 */}
               {this.state[key] && this.state[key].distribution.show ? (
                 <td className={styles.td}>
                   {this.state[key].distribution.loading ? (
