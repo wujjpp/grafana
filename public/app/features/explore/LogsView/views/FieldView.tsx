@@ -254,7 +254,6 @@ export default class FieldView extends React.PureComponent<Props, State> {
 
   copyValue(value: string, event: any): void {
     copy(value);
-    console.log(event);
 
     $(event.target.parentElement).addClass(styles.toolbarItemActive);
 
