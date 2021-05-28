@@ -4,10 +4,11 @@
 
 import React from 'react';
 import _ from 'lodash';
-import { stylesFactory } from '@grafana/ui';
+import { stylesFactory, Icon } from '@grafana/ui';
 import { css } from 'emotion';
 import $ from 'jquery';
 import utils from '../utils';
+import copy from 'copy-to-clipboard';
 
 const hljs = require('highlight.js/lib/core');
 const languageJson = require('highlight.js/lib/languages/json');
@@ -78,6 +79,18 @@ export default class JsonView extends React.PureComponent<Props> {
     }
   }
 
+  copyValue(event: any): void {
+    const { entity } = this.props;
+
+    copy(JSON.stringify(entity || {}, null, 2));
+
+    $(event.target.parentElement).addClass(this.styles.toolbarItemActive);
+
+    setTimeout(() => {
+      $(event.target.parentElement).removeClass(this.styles.toolbarItemActive);
+    }, 800);
+  }
+
   render() {
     const { entity } = this.props;
 
@@ -129,6 +142,13 @@ export default class JsonView extends React.PureComponent<Props> {
             }}
           ></code>
         </pre>
+
+        {/* 复制内容按钮 */}
+        <div className={this.styles.toolbarContainer}>
+          <div className={this.styles.toolbarItem}>
+            <Icon name="copy" title="复制内容" onClick={this.copyValue.bind(this)}></Icon>
+          </div>
+        </div>
       </div>
     );
   }
@@ -137,6 +157,8 @@ export default class JsonView extends React.PureComponent<Props> {
 const getStyles = stylesFactory(() => {
   return {
     highlightView: css`
+      position: relative;
+
       pre {
         border-radius: 0px;
         // background-color: #141619 !important;
@@ -176,6 +198,26 @@ const getStyles = stylesFactory(() => {
       :hover {
         color: rgb(51, 162, 229) !important;
       }
+    `,
+
+    toolbarContainer: css`
+      position: absolute;
+      right: 8px;
+      top: 8px;
+    `,
+
+    toolbarItem: css`
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+      color: rgb(179, 179, 179);
+      :hover {
+        color: rgb(255, 255, 255);
+      }
+    `,
+
+    toolbarItemActive: css`
+      color: rgb(51, 162, 229) !important;
     `,
   };
 });

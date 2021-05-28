@@ -4,22 +4,10 @@
 
 import React from 'react';
 import _ from 'lodash';
-import {
-  stylesFactory,
-  Drawer,
-  Button,
-  TabsBar,
-  Tab,
-  TabContent,
-  Field,
-  CustomScrollbar,
-  Alert,
-  Icon,
-} from '@grafana/ui';
+import { stylesFactory, Drawer, Button, TabsBar, Tab, TabContent, Field, CustomScrollbar, Alert } from '@grafana/ui';
 import { css } from 'emotion';
 import JsonView from './JsonView';
 import axios from 'axios';
-import copy from 'copy-to-clipboard';
 
 interface Props {
   onClose: () => void;
@@ -160,16 +148,6 @@ export default class DiagnosticsView extends React.Component<Props, State> {
       });
   }
 
-  copyValue(value: any, event: any): void {
-    copy(JSON.stringify(value || {}, null, 2));
-
-    $(event.target.parentElement).addClass(this.styles.toolbarItemActive);
-
-    setTimeout(() => {
-      $(event.target.parentElement).removeClass(this.styles.toolbarItemActive);
-    }, 800);
-  }
-
   render() {
     const { onClose, path, headers, query, data, method } = this.props;
 
@@ -211,16 +189,6 @@ export default class DiagnosticsView extends React.Component<Props, State> {
                         <Field label="Query">
                           <div className={this.styles.jsonViewContainer}>
                             <JsonView entity={JSON.parse(query)}></JsonView>
-
-                            <div className={this.styles.toolbarContainer}>
-                              <div className={this.styles.toolbarItem}>
-                                <Icon
-                                  name="copy"
-                                  title="复制内容"
-                                  onClick={this.copyValue.bind(this, JSON.parse(query))}
-                                ></Icon>
-                              </div>
-                            </div>
                           </div>
                         </Field>
                       )}
@@ -228,16 +196,6 @@ export default class DiagnosticsView extends React.Component<Props, State> {
                         <Field label="Data">
                           <div className={this.styles.jsonViewContainer}>
                             <JsonView entity={JSON.parse(data)}></JsonView>
-
-                            <div className={this.styles.toolbarContainer}>
-                              <div className={this.styles.toolbarItem}>
-                                <Icon
-                                  name="copy"
-                                  title="复制内容"
-                                  onClick={this.copyValue.bind(this, JSON.parse(data))}
-                                ></Icon>
-                              </div>
-                            </div>
                           </div>
                         </Field>
                       )}
@@ -245,16 +203,6 @@ export default class DiagnosticsView extends React.Component<Props, State> {
                         <Field label="Request Headers">
                           <div className={this.styles.jsonViewContainer}>
                             <JsonView entity={JSON.parse(headers)}></JsonView>
-
-                            <div className={this.styles.toolbarContainer}>
-                              <div className={this.styles.toolbarItem}>
-                                <Icon
-                                  name="copy"
-                                  title="复制内容"
-                                  onClick={this.copyValue.bind(this, JSON.parse(headers))}
-                                ></Icon>
-                              </div>
-                            </div>
                           </div>
                         </Field>
                       )}
@@ -287,16 +235,6 @@ export default class DiagnosticsView extends React.Component<Props, State> {
                           ) : (
                             <span>Empty</span>
                           )}
-
-                          <div className={this.styles.toolbarContainer}>
-                            <div className={this.styles.toolbarItem}>
-                              <Icon
-                                name="copy"
-                                title="复制内容"
-                                onClick={this.copyValue.bind(this, this.state.responseBody)}
-                              ></Icon>
-                            </div>
-                          </div>
                         </div>
                       </Field>
                       <Field label="Response Headers">
@@ -306,16 +244,6 @@ export default class DiagnosticsView extends React.Component<Props, State> {
                           ) : (
                             <span>Empty</span>
                           )}
-
-                          <div className={this.styles.toolbarContainer}>
-                            <div className={this.styles.toolbarItem}>
-                              <Icon
-                                name="copy"
-                                title="复制内容"
-                                onClick={this.copyValue.bind(this, this.state.responseHeaders)}
-                              ></Icon>
-                            </div>
-                          </div>
                         </div>
                       </Field>
 
