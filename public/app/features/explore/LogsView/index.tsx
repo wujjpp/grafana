@@ -522,7 +522,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
             </div>
 
             <div className={`${this.styles.settingsItem} ${this.styles.marginLeft10}`}>
-              <div className={this.styles.switchLabel}>增强表格</div>
+              <div className={this.styles.switchLabel}>增强视图</div>
               <div className={this.styles.switchContainer}>
                 <Switch value={this.state.enhancedMode} onChange={this.changeEnhancedMode.bind(this)}></Switch>
               </div>
