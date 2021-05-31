@@ -114,9 +114,15 @@ const styles = stylesFactory(() => {
       color: rgb(51, 162, 229);
     `,
 
-    link: css`
+    linkA: css`
+      display: inline-block;
+      vertical-align: middle;
+    `,
+
+    linkSvg: css`
+      fill: rgb(179, 179, 179);
       :hover {
-        color: red;
+        fill: rgb(255, 255, 255);
       }
     `,
   };
@@ -195,7 +201,18 @@ export default class FieldView extends React.PureComponent<Props, State> {
   formatField(fieldName: string, v: any) {
     if (fieldName === 'fields.requestContext.requestId') {
       const target = `/explore?orgId=1&left=%5B"now-1h","now","QCC%20Log%20Backend%20Datasource",%7B"queryText":"*%20and%20fields.requestContext.requestId:${v}"%7D%5D`;
-      return `${v}<a href=${target} target="_blank" title="点击查看所有关联日志" class="${styles.link}">【点击查看关联日志】</a>`;
+      return `${v}&nbsp;&nbsp;<a href=${target} target="_blank" title="点击查看所有关联日志" class="${styles.linkA}">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          class="${styles.linkSvg}"
+        >
+          <path d="M18,10.82a1,1,0,0,0-1,1V19a1,1,0,0,1-1,1H5a1,1,0,0,1-1-1V8A1,1,0,0,1,5,7h7.18a1,1,0,0,0,0-2H5A3,3,0,0,0,2,8V19a3,3,0,0,0,3,3H16a3,3,0,0,0,3-3V11.82A1,1,0,0,0,18,10.82Zm3.92-8.2a1,1,0,0,0-.54-.54A1,1,0,0,0,21,2H15a1,1,0,0,0,0,2h3.59L8.29,14.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0L20,5.41V9a1,1,0,0,0,2,0V3A1,1,0,0,0,21.92,2.62Z">
+          </path>
+        </svg>
+      </a>`;
     }
 
     if (fieldName === 'time' && _.isString(v) && v.length === 13) {
