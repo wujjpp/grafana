@@ -324,7 +324,6 @@ export default class FieldView extends React.PureComponent<Props, State> {
   render() {
     const { value, valueFilters, isInJsonMode, isInSqlMode, fieldName } = this.props;
 
-    console.log(encodeURIComponent(value));
     return (
       <td className={styles.td}>
         {isInJsonMode ? (
