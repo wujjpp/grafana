@@ -20,6 +20,7 @@ const fields: Record<string, string> = {
   'fields.elasticSearchSlow.host': 'ES主机',
   'fields.elasticSearchSlow.queryInfo': 'ES查询参数',
   'fields.elasticSearchSlow.start': '查询开始时间',
+  'fields.error.name': '错误名称',
   'fields.error.code': '错误代码',
   'fields.error.errno': '错误码',
   'fields.error.message': '错误信息',

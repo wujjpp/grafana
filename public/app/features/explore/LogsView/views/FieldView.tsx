@@ -199,12 +199,13 @@ export default class FieldView extends React.PureComponent<Props, State> {
   toggleBtn: HTMLElement | null;
 
   getFileldLink(fieldName: string, fieldValue: string): string {
-    const { dataSourceInstanceName } = this.props;
+    if (!_.isUndefined(fieldValue) && !_.isNull(fieldValue) && fieldValue !== '') {
+      const { dataSourceInstanceName } = this.props;
 
-    const target = `/explore?orgId=1&left=%5B"now-1h","now","${encodeURIComponent(
-      dataSourceInstanceName
-    )}",%7B"queryText":"*%20and%20${fieldName}:${fieldValue}"%7D%5D`;
-    return `${fieldValue}&nbsp;&nbsp;<a href=${target} target="_blank" title="点击查看【${fieldName}=${fieldValue}】的日志" class="${styles.linkA}">
+      const target = `/explore?orgId=1&left=%5B"now-1h","now","${encodeURIComponent(
+        dataSourceInstanceName
+      )}",%7B"queryText":"*%20and%20${fieldName}:${fieldValue}"%7D%5D`;
+      return `${fieldValue}&nbsp;&nbsp;<a href=${target} target="_blank" title="点击查看【${fieldName}=${fieldValue}】的日志" class="${styles.linkA}">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -216,6 +217,8 @@ export default class FieldView extends React.PureComponent<Props, State> {
         </path>
       </svg>
     </a>`;
+    }
+    return fieldValue + ' ';
   }
 
   // 格式化内容，遇到"回车"换成<br />
@@ -238,12 +241,12 @@ export default class FieldView extends React.PureComponent<Props, State> {
       v = v.replace(/\n/gi, '<br />');
     }
 
-    if (!_.isString(v) && v !== undefined) {
+    if (!_.isString(v) && v !== undefined && v !== null) {
       v = v.toString();
     }
 
     // 处理高亮
-    if (this.props.valueFilters.length > 0) {
+    if (this.props.valueFilters.length > 0 && v) {
       const matches = _.map(this.props.valueFilters, (key) => {
         return {
           regexp: new RegExp(`${key}`, 'ig'),
@@ -321,6 +324,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
   render() {
     const { value, valueFilters, isInJsonMode, isInSqlMode, fieldName } = this.props;
 
+    console.log(encodeURIComponent(value));
     return (
       <td className={styles.td}>
         {isInJsonMode ? (
@@ -357,29 +361,33 @@ export default class FieldView extends React.PureComponent<Props, State> {
               ></div>
             )}
 
-            <div className={styles.toolbarContainer}>
-              <div className={styles.toolbarItem}>
-                <Icon name="copy" title="复制内容" onClick={this.copyValue.bind(this, value)}></Icon>
-              </div>
-            </div>
+            {!_.isNull(value) && !_.isUndefined(value) && value !== '' && (
+              <>
+                <div className={styles.toolbarContainer}>
+                  <div className={styles.toolbarItem}>
+                    <Icon name="copy" title="复制内容" onClick={this.copyValue.bind(this, value)}></Icon>
+                  </div>
+                </div>
 
-            <div
-              ref={(btn) => {
-                this.toggleBtn = btn;
-              }}
-              className={styles.toggleContainer}
-              onClick={this.toggle.bind(this)}
-            >
-              {this.state.expanded ? (
-                <>
-                  点击收起 <Icon name="angle-up"></Icon>
-                </>
-              ) : (
-                <>
-                  点击展开 <Icon name="angle-down"></Icon>
-                </>
-              )}
-            </div>
+                <div
+                  ref={(btn) => {
+                    this.toggleBtn = btn;
+                  }}
+                  className={styles.toggleContainer}
+                  onClick={this.toggle.bind(this)}
+                >
+                  {this.state.expanded ? (
+                    <>
+                      点击收起 <Icon name="angle-up"></Icon>
+                    </>
+                  ) : (
+                    <>
+                      点击展开 <Icon name="angle-down"></Icon>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </td>
