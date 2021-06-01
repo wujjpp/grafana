@@ -135,6 +135,7 @@ interface Props {
   value: any;
   valueFilters: string[];
   onChangeValueSearchFilter: (value: string) => void;
+  dataSourceInstanceName: string;
 }
 
 interface State {
@@ -198,7 +199,11 @@ export default class FieldView extends React.PureComponent<Props, State> {
   toggleBtn: HTMLElement | null;
 
   getFileldLink(fieldName: string, fieldValue: string): string {
-    const target = `/explore?orgId=1&left=%5B"now-1h","now","QCC%20Log%20Backend%20Datasource",%7B"queryText":"*%20and%20${fieldName}:${fieldValue}"%7D%5D`;
+    const { dataSourceInstanceName } = this.props;
+
+    const target = `/explore?orgId=1&left=%5B"now-1h","now","${encodeURIComponent(
+      dataSourceInstanceName
+    )}",%7B"queryText":"*%20and%20${fieldName}:${fieldValue}"%7D%5D`;
     return `${fieldValue}&nbsp;&nbsp;<a href=${target} target="_blank" title="点击查看【${fieldName}=${fieldValue}】的日志" class="${styles.linkA}">
       <svg
         xmlns="http://www.w3.org/2000/svg"

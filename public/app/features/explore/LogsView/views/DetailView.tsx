@@ -18,6 +18,7 @@ interface Props {
   searchFilters: SearchFilterItem[];
   valueFilters: string[];
   dataSourceId: number;
+  dataSourceInstanceName: string;
   queryText: string;
   absoluteTimeRange: AbsoluteTimeRange;
   onToggleFilter: (fieldName: string) => void;
@@ -52,6 +53,7 @@ export default class DetailView extends PureComponent<Props> {
       searchFilters,
       valueFilters,
       dataSourceId,
+      dataSourceInstanceName,
       queryText,
       absoluteTimeRange,
       onChangeSearchFilter,
@@ -85,6 +87,7 @@ export default class DetailView extends PureComponent<Props> {
               valueFilters={valueFilters}
               onToggleFilter={onToggleFilter}
               dataSourcedId={dataSourceId}
+              dataSourceInstanceName={dataSourceInstanceName}
               queryText={queryText}
               absoluteTimeRange={absoluteTimeRange}
               onChangeSearchFilter={onChangeSearchFilter}

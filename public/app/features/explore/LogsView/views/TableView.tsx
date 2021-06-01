@@ -100,6 +100,7 @@ export interface Props {
   searchFilters: SearchFilterItem[];
   valueFilters: string[];
   dataSourcedId: number;
+  dataSourceInstanceName: string;
   queryText: string;
   absoluteTimeRange: AbsoluteTimeRange;
   onToggleFilter: (fieldName: string) => void;
@@ -237,7 +238,7 @@ export default class TableView extends React.Component<Props, State> {
   }
 
   render() {
-    const { entity, columnFilters, onToggleFilter, valueFilters } = this.props;
+    const { entity, columnFilters, onToggleFilter, valueFilters, dataSourceInstanceName } = this.props;
 
     let flattenEntity = utils.flattenObject(entity);
 
@@ -342,6 +343,7 @@ export default class TableView extends React.Component<Props, State> {
                   valueFilters={valueFilters}
                   isInJsonMode={this.state[key] && this.state[key].isInJsonMode}
                   isInSqlMode={this.state[key] && this.state[key].isInSqlMode}
+                  dataSourceInstanceName={dataSourceInstanceName}
                 ></FieldView>
               )}
             </tr>

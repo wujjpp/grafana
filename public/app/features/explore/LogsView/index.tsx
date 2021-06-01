@@ -26,6 +26,7 @@ import DiagnosticsView from './views/DiagnosticsView';
 interface Props {
   exploreId: ExploreId;
   dataSourceId: number;
+  dataSourceInstanceName: string;
   width: number;
   dataFrame: DataFrame;
   updateTimeRange: (absoluteRange: AbsoluteTimeRange) => void;
@@ -282,6 +283,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
               searchFilters={this.state.searchFilters}
               valueFilters={this.state.valueFilters}
               dataSourceId={this.props.dataSourceId}
+              dataSourceInstanceName={this.props.dataSourceInstanceName}
               queryText={this.props.queryText}
               absoluteTimeRange={this.props.absoluteRange}
               onToggleFilter={this.toggleFilter.bind(this)}
@@ -669,6 +671,7 @@ function mapStateToProps(
   // @ts-ignore
   const item: ExploreItemState = explore[exploreId];
   const queries: DataQuery[] = item.queries;
+  const dataSourceInstanceName = item.datasourceInstance?.name || '';
 
   // 查询语句
   let queryText = '';
@@ -688,6 +691,7 @@ function mapStateToProps(
     queryText,
     queryState,
     queries,
+    dataSourceInstanceName,
   };
 }
 
