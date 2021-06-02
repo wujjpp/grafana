@@ -145,7 +145,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
 
         if (!exists) {
           newSearchFilters.push({ name: fieldName, operator: ':', value: value });
-          conditions = `${conditions} and ${fieldName}:${value}`;
+          conditions = `${conditions} and ${fieldName}:"${value}"`;
         } else {
           const regex1 = new RegExp(` and ${fieldName}:${value} `, 'ig');
           const regex2 = new RegExp(` and ${fieldName}:${value}`, 'ig');

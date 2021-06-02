@@ -114,18 +114,6 @@ const styles = stylesFactory(() => {
     colorBlue: css`
       color: rgb(51, 162, 229);
     `,
-
-    linkA: css`
-      display: inline-block;
-      vertical-align: middle;
-    `,
-
-    linkSvg: css`
-      fill: rgb(179, 179, 179);
-      :hover {
-        fill: rgb(255, 255, 255);
-      }
-    `,
   };
 })();
 
@@ -183,41 +171,6 @@ const getFieldClassName = (key: string, value: any): string => {
   return className;
 };
 
-// URL中可能包含&timestamp字串, 这会导致被解析成表情符号x, 这边列出了白名单栏位，不能使用HTML方式显示
-const SHOULD_SHOW_ORIGIN_CONTENT_FIELDS = [
-  'fields.requestContext.originalUrl',
-  'fields.requestContext.originalUrl2',
-  'fields.requestContext.path',
-  'fields.requestContext.referer',
-  'fields.requestInfo.url',
-  'fields.requestInfo.urlFull',
-];
-
-// 哪些栏位需要添加explore链接
-const SHOUL_ADD_LINK_TO_EXPLORE = [
-  'category',
-  'level',
-  'fields.eventType',
-  'fields.requestContext.requestId',
-  'fields.requestContext.deviceId',
-  'fields.requestContext.userId',
-  'fields.requestContext.clientIp',
-  'fields.requestContext.clientRealIp',
-  'fields.error.code',
-  'fields.error.errno',
-  'fields.error.message',
-  'fields.error.name',
-  'fields.requestContext.path',
-  'fields.requestContext.strategies.isInBlacklist',
-  'fields.requestContext.deviceType',
-  'fields.requestContext.userAgent',
-  'fields.http.httpStatus',
-  'fields.requestContext.eagleeyeTraceId',
-];
-
-// 时间轴向前小猴偏移量10分钟，保证有数据是全的
-const OFFSET = 10 * 60 * 1000;
-
 export default class FieldView extends React.PureComponent<Props, State> {
   state: State = {
     expanded: false,
@@ -227,39 +180,13 @@ export default class FieldView extends React.PureComponent<Props, State> {
   toggleBtn: HTMLElement | null;
 
   getFileldLink(fieldName: string, fieldValue: string): string {
-    if (!_.isUndefined(fieldValue) && !_.isNull(fieldValue) && fieldValue !== '') {
-      const { dataSourceInstanceName, absoluteTimeRange } = this.props;
-
-      const params = [
-        `${absoluteTimeRange.from - OFFSET}`,
-        `${absoluteTimeRange.to + OFFSET}`,
-        dataSourceInstanceName,
-        { queryText: `* and ${fieldName}:"${fieldValue}"` },
-      ];
-      const target = `/explore?orgId=1&left=${encodeURIComponent(JSON.stringify(params))}`;
-
-      return `<a href=${target} target="_blank" title="点击查看【${fieldName}=${fieldValue}】的日志" class="${styles.linkA}">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        width="16"
-        height="16"
-        class="${styles.linkSvg}"
-      >
-        <path d="M18,10.82a1,1,0,0,0-1,1V19a1,1,0,0,1-1,1H5a1,1,0,0,1-1-1V8A1,1,0,0,1,5,7h7.18a1,1,0,0,0,0-2H5A3,3,0,0,0,2,8V19a3,3,0,0,0,3,3H16a3,3,0,0,0,3-3V11.82A1,1,0,0,0,18,10.82Zm3.92-8.2a1,1,0,0,0-.54-.54A1,1,0,0,0,21,2H15a1,1,0,0,0,0,2h3.59L8.29,14.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0L20,5.41V9a1,1,0,0,0,2,0V3A1,1,0,0,0,21.92,2.62Z">
-        </path>
-      </svg>
-    </a>`;
-    }
-    return '';
+    const { dataSourceInstanceName, absoluteTimeRange } = this.props;
+    const { from, to } = absoluteTimeRange;
+    return utils.getFieldToExploreLink(fieldName, fieldValue, dataSourceInstanceName, from, to);
   }
 
   // 格式化内容，遇到"回车"换成<br />
   formatField(fieldName: string, v: any) {
-    if (_.includes(SHOUL_ADD_LINK_TO_EXPLORE, fieldName)) {
-      return `${v}&nbsp;&nbsp;${this.getFileldLink(fieldName, v)}`;
-    }
-
     if (fieldName === 'time' && _.isString(v) && v.length === 13) {
       return moment(+v).format('YYYY-MM-DD HH:mm:ss.SSS') + `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(${v})`;
     }
@@ -285,6 +212,10 @@ export default class FieldView extends React.PureComponent<Props, State> {
       _.forEach(matches, (match) => {
         v = v.replace(match.regexp, `<em>${match.key}</em>`);
       });
+    }
+
+    if (_.includes(utils.SHOULD_ADD_LINK_TO_EXPLORE, fieldName)) {
+      v = `${v}&nbsp;&nbsp;${this.getFileldLink(fieldName, v)}`;
     }
 
     return v;
@@ -369,7 +300,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
         ) : (
           <div className={styles.expandedContainer}>
             {/* URL类的栏位不需要以HTML方式展示 */}
-            {_.includes(SHOULD_SHOW_ORIGIN_CONTENT_FIELDS, fieldName) ? (
+            {_.includes(utils.SHOULD_SHOW_ORIGIN_CONTENT_FIELDS, fieldName) ? (
               <div
                 ref={(container) => {
                   this.container = container;
@@ -377,7 +308,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
                 className={`${getFieldClassName(fieldName, value)} ${styles.fieldContextContainer}`}
               >
                 <span>{value}</span>
-                {_.includes(SHOUL_ADD_LINK_TO_EXPLORE, fieldName) && (
+                {_.includes(utils.SHOULD_ADD_LINK_TO_EXPLORE, fieldName) && (
                   <>
                     &nbsp;&nbsp;<span dangerouslySetInnerHTML={{ __html: this.getFileldLink(fieldName, value) }}></span>
                   </>

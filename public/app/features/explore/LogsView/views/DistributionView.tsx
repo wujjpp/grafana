@@ -6,13 +6,15 @@ import React from 'react';
 import _ from 'lodash';
 import { stylesFactory } from '@grafana/ui';
 import { css } from 'emotion';
+import { AbsoluteTimeRange } from '@grafana/data';
+import utils from '../utils';
 
 const styles = stylesFactory(() => {
   return {
     container: css`
       position: relative;
       display: inline-block;
-      min-width: 300px;
+      min-width: 320px;
     `,
     header: css`
       border-bottom: 1px solid rgb(44, 50, 53);
@@ -24,8 +26,17 @@ const styles = stylesFactory(() => {
 
     statsRow: css`
       margin: 9.14286px 0px;
+      padding-right: 28px;
       color: rgb(199, 208, 217);
       word-break: break-all;
+      position: relative;
+    `,
+
+    exploreLinkContainer: css`
+      position: absolute;
+      top: 50%;
+      right: 0;
+      margin-top: -2px;
     `,
 
     statsRowLabel: css`
@@ -65,10 +76,13 @@ const styles = stylesFactory(() => {
 
 interface Props {
   items: Array<{ label: string; count: number }>;
+  fieldName: string;
+  dataSourceInstanceName: string;
+  absoluteTimeRange: AbsoluteTimeRange;
 }
 
 const DistributionView = (props: Props): JSX.Element => {
-  let { items } = props;
+  let { items, fieldName, dataSourceInstanceName, absoluteTimeRange } = props;
 
   let totalRecords = _.reduce(items, (total, o) => (total += o.count), 0);
   let notNullCount = totalRecords;
@@ -105,6 +119,20 @@ const DistributionView = (props: Props): JSX.Element => {
             <div className={styles.statsRowBar}>
               <div className={styles.statsRowBarInner} style={{ width: o.percent + '%' }}></div>
             </div>
+            {_.includes(utils.SHOULD_ADD_LINK_TO_EXPLORE, fieldName) && (
+              <div
+                className={styles.exploreLinkContainer}
+                dangerouslySetInnerHTML={{
+                  __html: utils.getFieldToExploreLink(
+                    fieldName,
+                    o.label,
+                    dataSourceInstanceName,
+                    absoluteTimeRange.from,
+                    absoluteTimeRange.to
+                  ),
+                }}
+              ></div>
+            )}
           </div>
         ))}
       </div>
