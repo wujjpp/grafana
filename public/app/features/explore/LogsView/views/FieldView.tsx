@@ -183,6 +183,7 @@ const getFieldClassName = (key: string, value: any): string => {
   return className;
 };
 
+// URL中可能包含&timestamp字串, 这会导致被解析成表情符号x, 这边列出了白名单栏位，不能使用HTML方式显示
 const SHOULD_SHOW_ORIGIN_CONTENT_FIELDS = [
   'fields.requestContext.originalUrl',
   'fields.requestContext.originalUrl2',
@@ -192,6 +193,7 @@ const SHOULD_SHOW_ORIGIN_CONTENT_FIELDS = [
   'fields.requestInfo.urlFull',
 ];
 
+// 哪些栏位需要添加explore链接
 const SHOUL_ADD_LINK_TO_EXPLORE = [
   'category',
   'level',

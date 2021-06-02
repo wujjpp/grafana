@@ -55,7 +55,7 @@ const styles = stylesFactory(() => {
     `,
 
     fieldNameCell: css`
-      width: 340px;
+      width: 350px;
     `,
 
     statusLoading: css`
