@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { Icon, stylesFactory } from '@grafana/ui';
+import { AbsoluteTimeRange } from '@grafana/data';
 import { css } from 'emotion';
 import _ from 'lodash';
 import JsonView from './JsonView';
@@ -136,6 +137,7 @@ interface Props {
   valueFilters: string[];
   onChangeValueSearchFilter: (value: string) => void;
   dataSourceInstanceName: string;
+  absoluteTimeRange: AbsoluteTimeRange;
 }
 
 interface State {
@@ -190,6 +192,30 @@ const SHOULD_SHOW_ORIGIN_CONTENT_FIELDS = [
   'fields.requestInfo.urlFull',
 ];
 
+const SHOUL_ADD_LINK_TO_EXPLORE = [
+  'category',
+  'level',
+  'fields.eventType',
+  'fields.requestContext.requestId',
+  'fields.requestContext.deviceId',
+  'fields.requestContext.userId',
+  'fields.requestContext.clientIp',
+  'fields.requestContext.clientRealIp',
+  'fields.error.code',
+  'fields.error.errno',
+  'fields.error.message',
+  'fields.error.name',
+  'fields.requestContext.path',
+  'fields.requestContext.strategies.isInBlacklist',
+  'fields.requestContext.deviceType',
+  'fields.requestContext.userAgent',
+  'fields.http.httpStatus',
+  'fields.requestContext.eagleeyeTraceId',
+];
+
+// 时间轴向前小猴偏移量10分钟，保证有数据是全的
+const OFFSET = 10 * 60 * 1000;
+
 export default class FieldView extends React.PureComponent<Props, State> {
   state: State = {
     expanded: false,
@@ -200,12 +226,17 @@ export default class FieldView extends React.PureComponent<Props, State> {
 
   getFileldLink(fieldName: string, fieldValue: string): string {
     if (!_.isUndefined(fieldValue) && !_.isNull(fieldValue) && fieldValue !== '') {
-      const { dataSourceInstanceName } = this.props;
+      const { dataSourceInstanceName, absoluteTimeRange } = this.props;
 
-      const target = `/explore?orgId=1&left=%5B"now-1h","now","${encodeURIComponent(
-        dataSourceInstanceName
-      )}",%7B"queryText":"*%20and%20${fieldName}:${fieldValue}"%7D%5D`;
-      return `${fieldValue}&nbsp;&nbsp;<a href=${target} target="_blank" title="点击查看【${fieldName}=${fieldValue}】的日志" class="${styles.linkA}">
+      const params = [
+        `${absoluteTimeRange.from - OFFSET}`,
+        `${absoluteTimeRange.to + OFFSET}`,
+        dataSourceInstanceName,
+        { queryText: `* and ${fieldName}:"${fieldValue}"` },
+      ];
+      const target = `/explore?orgId=1&left=${encodeURIComponent(JSON.stringify(params))}`;
+
+      return `<a href=${target} target="_blank" title="点击查看【${fieldName}=${fieldValue}】的日志" class="${styles.linkA}">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -218,18 +249,13 @@ export default class FieldView extends React.PureComponent<Props, State> {
       </svg>
     </a>`;
     }
-    return fieldValue + ' ';
+    return '';
   }
 
   // 格式化内容，遇到"回车"换成<br />
   formatField(fieldName: string, v: any) {
-    if (
-      fieldName === 'fields.requestContext.requestId' ||
-      fieldName === 'fields.requestContext.deviceId' ||
-      fieldName === 'fields.requestContext.userId' ||
-      fieldName === 'fields.requestContext.clientRealIp'
-    ) {
-      return this.getFileldLink(fieldName, v);
+    if (_.includes(SHOUL_ADD_LINK_TO_EXPLORE, fieldName)) {
+      return `${v}&nbsp;&nbsp;${this.getFileldLink(fieldName, v)}`;
     }
 
     if (fieldName === 'time' && _.isString(v) && v.length === 13) {
@@ -348,7 +374,12 @@ export default class FieldView extends React.PureComponent<Props, State> {
                 }}
                 className={`${getFieldClassName(fieldName, value)} ${styles.fieldContextContainer}`}
               >
-                {value}
+                <span>{value}</span>
+                {_.includes(SHOUL_ADD_LINK_TO_EXPLORE, fieldName) && (
+                  <>
+                    &nbsp;&nbsp;<span dangerouslySetInnerHTML={{ __html: this.getFileldLink(fieldName, value) }}></span>
+                  </>
+                )}
               </div>
             ) : (
               <div

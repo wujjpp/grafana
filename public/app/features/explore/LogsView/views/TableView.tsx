@@ -238,7 +238,14 @@ export default class TableView extends React.Component<Props, State> {
   }
 
   render() {
-    const { entity, columnFilters, onToggleFilter, valueFilters, dataSourceInstanceName } = this.props;
+    const {
+      entity,
+      columnFilters,
+      onToggleFilter,
+      valueFilters,
+      dataSourceInstanceName,
+      absoluteTimeRange,
+    } = this.props;
 
     let flattenEntity = utils.flattenObject(entity);
 
@@ -344,6 +351,7 @@ export default class TableView extends React.Component<Props, State> {
                   isInJsonMode={this.state[key] && this.state[key].isInJsonMode}
                   isInSqlMode={this.state[key] && this.state[key].isInSqlMode}
                   dataSourceInstanceName={dataSourceInstanceName}
+                  absoluteTimeRange={absoluteTimeRange}
                 ></FieldView>
               )}
             </tr>
