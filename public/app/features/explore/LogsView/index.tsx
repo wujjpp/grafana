@@ -462,6 +462,10 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
       }
     }
 
+    if (!_.isEmpty(values) && values[0].time && !this.state.isLoadingPagedData) {
+      values = _.sortBy(values, (o) => -o.time);
+    }
+
     return (
       <div className={this.styles.container}>
         {/* Graph区域 */}
