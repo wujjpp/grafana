@@ -94,12 +94,11 @@ const DistributionView = (props: Props): JSX.Element => {
   }
 
   let list: any[] = _.chain(items)
-    .filter((o) => o.label !== 'null')
     .map((o) => {
       return {
         label: o.label,
         count: o.count,
-        percent: (o.count * 100) / (notNullCount * 1.0),
+        percent: (o.count * 100) / (totalRecords * 1.0),
       };
     })
     .orderBy(['count'], ['desc'])
@@ -107,7 +106,9 @@ const DistributionView = (props: Props): JSX.Element => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>{`${notNullCount} of ${totalRecords} rows have that field(limit 10000)`}</div>
+      <div
+        className={styles.header}
+      >{`${notNullCount} of ${totalRecords} rows have that field(display limit 10000 items)`}</div>
       <div className={styles.body}>
         {_.map(list, (o) => (
           <div className={styles.statsRow} key={`${o.label}-${o.count}`}>
@@ -128,7 +129,8 @@ const DistributionView = (props: Props): JSX.Element => {
                     o.label,
                     dataSourceInstanceName,
                     absoluteTimeRange.from,
-                    absoluteTimeRange.to
+                    absoluteTimeRange.to,
+                    o.label === 'null'
                   ),
                 }}
               ></div>

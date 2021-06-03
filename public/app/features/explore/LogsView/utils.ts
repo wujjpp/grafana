@@ -51,14 +51,15 @@ const getFieldToExploreLink = (
   fieldValue: any,
   dataSourceInstanceName: string,
   from: number,
-  to: number
+  to: number,
+  invert = false
 ): string => {
   if (!_.isUndefined(fieldValue) && !_.isNull(fieldValue) && fieldValue !== '') {
     const params = [
       `${from - OFFSET}`,
       `${to + OFFSET}`,
       dataSourceInstanceName,
-      { queryText: `* and ${fieldName}:"${fieldValue}"` },
+      { queryText: invert ? `* and not ${fieldName}:*` : `* and ${fieldName}:"${fieldValue}"` },
     ];
     const target = `/explore?orgId=1&left=${encodeURIComponent(JSON.stringify(params))}`;
 
@@ -108,6 +109,10 @@ const SHOULD_ADD_LINK_TO_EXPLORE = [
   'fields.requestContext.userAgent',
   'fields.http.httpStatus',
   'fields.requestContext.eagleeyeTraceId',
+  'fields.requestContext.requestFromAppName',
+  'fields.requestContext.requestFromHeadAppName',
+  'fields.requestContext.requestFromClusterName',
+  'fields.requestContext.requestFromHeadClusterName',
 ];
 
 export default {
