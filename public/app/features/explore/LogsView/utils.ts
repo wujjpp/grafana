@@ -93,6 +93,7 @@ const SHOULD_SHOW_ORIGIN_CONTENT_FIELDS = [
 const SHOULD_ADD_LINK_TO_EXPLORE = [
   'category',
   'level',
+  'logId',
   'fields.eventType',
   'fields.requestContext.requestId',
   'fields.requestContext.deviceId',
