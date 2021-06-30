@@ -162,7 +162,6 @@ const getFieldClassName = (key: string, value: any): string => {
     key === 'appName' ||
     key === 'category' ||
     key === 'fields.eventType' ||
-    key === 'fields.requestContext.originalUrl2' ||
     key === 'fields.requestInfo.urlFull'
   ) {
     className = styles.colorBlue;

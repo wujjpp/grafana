@@ -82,7 +82,6 @@ const getFieldToExploreLink = (
 // URL中可能包含&timestamp字串, 这会导致被解析成表情符号x, 这边列出了白名单栏位，不能使用HTML方式显示
 const SHOULD_SHOW_ORIGIN_CONTENT_FIELDS = [
   'fields.requestContext.originalUrl',
-  'fields.requestContext.originalUrl2',
   'fields.requestContext.path',
   'fields.requestContext.referer',
   'fields.requestInfo.url',

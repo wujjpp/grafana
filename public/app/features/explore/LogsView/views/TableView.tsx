@@ -83,7 +83,7 @@ const getFieldClassName = (key: string): string => {
     key === 'fields.requestContext.query' ||
     key === 'fields.requestContext.body' ||
     key === 'fields.requestContext.path' ||
-    key === 'fields.requestContext.originalUrl2' ||
+    key === 'fields.requestContext.originalUrl' ||
     key === 'fields.requestInfo.url' ||
     key === 'fields.requestInfo.urlFull' ||
     key === 'fields.requestInfo.body' ||
@@ -248,12 +248,6 @@ export default class TableView extends React.Component<Props, State> {
     } = this.props;
 
     let flattenEntity = utils.flattenObject(entity);
-
-    let path = flattenEntity['fields.requestContext.path'];
-    let query = flattenEntity['fields.requestContext.query'];
-    if (path && query) {
-      flattenEntity['fields.requestContext.originalUrl2'] = `${path}?${qs.stringify(JSON.parse(query))}`;
-    }
 
     let apiRequestUrl = flattenEntity['fields.requestInfo.url'];
     let apiRequestQuery = flattenEntity['fields.requestInfo.query'];

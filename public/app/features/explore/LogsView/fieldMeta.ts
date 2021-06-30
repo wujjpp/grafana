@@ -69,7 +69,6 @@ const fields: Record<string, string> = {
   'fields.requestContext.isVip': '当前用户是否为VIP',
   'fields.requestContext.isXhr': '是否为ajax请求',
   'fields.requestContext.originalUrl': '请求URL, 含Query参数',
-  'fields.requestContext.originalUrl2': '完整的请求URL，包含请求参数，一般用于直接复制',
   'fields.requestContext.params': '请求params',
   'fields.requestContext.path': '请求的URL, 不含Query参数',
   'fields.requestContext.query': 'Query参数',
