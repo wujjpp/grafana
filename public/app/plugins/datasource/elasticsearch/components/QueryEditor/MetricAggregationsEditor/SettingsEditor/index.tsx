@@ -1,5 +1,5 @@
-import { InlineField, Input, InlineSwitch } from '@grafana/ui';
-import React, { FunctionComponent, ComponentProps, useState } from 'react';
+import { InlineField, Input, InlineSwitch, Select } from '@grafana/ui';
+import React, { ComponentProps, useState } from 'react';
 import { extendedStats } from '../../../../query_def';
 import { useDispatch } from '../../../../hooks/useStatelessReducer';
 import { changeMetricMeta, changeMetricSetting } from '../state/actions';
@@ -14,6 +14,7 @@ import { SettingField } from './SettingField';
 import { SettingsEditorContainer } from '../../SettingsEditorContainer';
 import { useDescription } from './useDescription';
 import { MovingAverageSettingsEditor } from './MovingAverageSettingsEditor';
+import { TopMetricsSettingsEditor } from './TopMetricsSettingsEditor';
 import { uniqueId } from 'lodash';
 import { metricAggregationConfig } from '../utils';
 import { useQuery } from '../../ElasticsearchQueryContext';
@@ -28,23 +29,32 @@ interface Props {
   previousMetrics: MetricAggregation[];
 }
 
-export const SettingsEditor: FunctionComponent<Props> = ({ metric, previousMetrics }) => {
+export const SettingsEditor = ({ metric, previousMetrics }: Props) => {
   const dispatch = useDispatch();
   const description = useDescription(metric);
   const query = useQuery();
+
+  const rateAggUnitOptions = [
+    { value: 'second', label: 'Second' },
+    { value: 'minute', label: 'Minute' },
+    { value: 'hour', label: 'Hour' },
+    { value: 'day', label: 'Day' },
+    { value: 'week', label: 'Week' },
+    { value: 'month', label: 'Month' },
+    { value: 'quarter', label: 'Quarter' },
+    { value: 'Year', label: 'Year' },
+  ];
+
+  const rateAggModeOptions = [
+    { value: 'sum', label: 'Sum' },
+    { value: 'value_count', label: 'Value count' },
+  ];
 
   return (
     <SettingsEditorContainer label={description} hidden={metric.hide}>
       {metric.type === 'derivative' && <SettingField label="Unit" metric={metric} settingName="unit" />}
 
-      {metric.type === 'serial_diff' && (
-        <InlineField label="Lag">
-          <Input
-            onBlur={(e) => dispatch(changeMetricSetting(metric, 'lag', parseInt(e.target.value, 10)))}
-            defaultValue={metric.settings?.lag}
-          />
-        </InlineField>
-      )}
+      {metric.type === 'serial_diff' && <SettingField label="Lag" metric={metric} settingName="lag" placeholder="1" />}
 
       {metric.type === 'cumulative_sum' && <SettingField label="Format" metric={metric} settingName="format" />}
 
@@ -57,6 +67,8 @@ export const SettingsEditor: FunctionComponent<Props> = ({ metric, previousMetri
           <SettingField label="Shift" metric={metric} settingName="shift" />
         </>
       )}
+
+      {metric.type === 'top_metrics' && <TopMetricsSettingsEditor metric={metric} />}
 
       {metric.type === 'bucket_script' && (
         <BucketScriptSettingsEditor value={metric} previousMetrics={previousMetrics} />
@@ -109,6 +121,28 @@ export const SettingsEditor: FunctionComponent<Props> = ({ metric, previousMetri
         </InlineField>
       )}
 
+      {metric.type === 'rate' && (
+        <>
+          <InlineField label="Unit" {...inlineFieldProps} data-testid="unit-select">
+            <Select
+              id={`ES-query-${query.refId}_metric-${metric.id}-unit`}
+              onChange={(e) => dispatch(changeMetricSetting(metric, 'unit', e.value))}
+              options={rateAggUnitOptions}
+              value={metric.settings?.unit}
+            />
+          </InlineField>
+
+          <InlineField label="Mode" {...inlineFieldProps} data-testid="mode-select">
+            <Select
+              id={`ES-query-${query.refId}_metric-${metric.id}-mode`}
+              onChange={(e) => dispatch(changeMetricSetting(metric, 'mode', e.value))}
+              options={rateAggModeOptions}
+              value={metric.settings?.unit}
+            />
+          </InlineField>
+        </>
+      )}
+
       {isMetricAggregationWithInlineScript(metric) && (
         <SettingField label="Script" metric={metric} settingName="script" placeholder="_value * 1" />
       )}
@@ -131,7 +165,7 @@ interface ExtendedStatSettingProps {
   onChange: (checked: boolean) => void;
   value: boolean;
 }
-const ExtendedStatSetting: FunctionComponent<ExtendedStatSettingProps> = ({ stat, onChange, value }) => {
+const ExtendedStatSetting = ({ stat, onChange, value }: ExtendedStatSettingProps) => {
   // this is needed for the htmlFor prop in the label so that clicking the label will toggle the switch state.
   const [id] = useState(uniqueId(`es-field-id-`));
 

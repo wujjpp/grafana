@@ -10,6 +10,7 @@ import {
   AnnotationQueryRequest,
   DataFrame,
   DataFrameView,
+  DataQuery,
   DataQueryError,
   DataQueryRequest,
   DataQueryResponse,
@@ -20,11 +21,12 @@ import {
   FieldCache,
   LoadingState,
   LogRowModel,
-  PluginMeta,
   QueryResultMeta,
   ScopedVars,
+  TimeRange,
 } from '@grafana/data';
-import { getTemplateSrv, TemplateSrv, BackendSrvRequest, FetchError, getBackendSrv } from '@grafana/runtime';
+import { BackendSrvRequest, FetchError, getBackendSrv } from '@grafana/runtime';
+import { getTemplateSrv, TemplateSrv } from 'app/features/templating/template_srv';
 import { addLabelToQuery } from 'app/plugins/datasource/prometheus/add_label_to_query';
 import { getTimeSrv, TimeSrv } from 'app/features/dashboard/services/TimeSrv';
 import { convertToWebSocketUrl } from 'app/core/utils/explore';
@@ -34,7 +36,7 @@ import {
   lokiStreamsToDataFrames,
   processRangeQueryResponse,
 } from './result_transformer';
-import { getHighlighterExpressionsFromQuery } from './query_utils';
+import { getHighlighterExpressionsFromQuery, queryHasPipeParser, addParsedLabelToQuery } from './query_utils';
 
 import {
   LokiOptions,
@@ -95,12 +97,19 @@ export class LokiDatasource extends DataSourceApi<LokiQuery, LokiOptions> {
 
   query(options: DataQueryRequest<LokiQuery>): Observable<DataQueryResponse> {
     const subQueries: Array<Observable<DataQueryResponse>> = [];
+    const scopedVars = {
+      ...options.scopedVars,
+      ...this.getRangeScopedVars(options.range),
+    };
     const filteredTargets = options.targets
       .filter((target) => target.expr && !target.hide)
-      .map((target) => ({
-        ...target,
-        expr: this.templateSrv.replace(target.expr, options.scopedVars, this.interpolateQueryExpr),
-      }));
+      .map((target) => {
+        const expr = this.addAdHocFilters(target.expr);
+        return {
+          ...target,
+          expr: this.templateSrv.replace(expr, scopedVars, this.interpolateQueryExpr),
+        };
+      });
 
     for (const target of filteredTargets) {
       if (target.instant) {
@@ -175,14 +184,10 @@ export class LokiDatasource extends DataSourceApi<LokiQuery, LokiOptions> {
         this.adjustInterval((options as DataQueryRequest<LokiQuery>).intervalMs || 1000, rangeMs) / 1000;
       // We want to ceil to 3 decimal places
       const step = Math.ceil(adjustedInterval * 1000) / 1000;
-      const alignedTimes = {
-        start: startNs - (startNs % 1e9),
-        end: endNs + (1e9 - (endNs % 1e9)),
-      };
 
       range = {
-        start: alignedTimes.start,
-        end: alignedTimes.end,
+        start: startNs,
+        end: endNs,
         step,
       };
     }
@@ -219,6 +224,7 @@ export class LokiDatasource extends DataSourceApi<LokiQuery, LokiOptions> {
       return this.runLiveQuery(target, maxDataPoints);
     }
     const query = this.createRangeQuery(target, options, maxDataPoints);
+
     return this._request(RANGE_QUERY_ENDPOINT, query).pipe(
       catchError((err: any) => this.throwUnless(err, err.status === 404, target)),
       switchMap((response: { data: LokiResponse; status: number }) =>
@@ -270,6 +276,16 @@ export class LokiDatasource extends DataSourceApi<LokiQuery, LokiOptions> {
     );
   };
 
+  getRangeScopedVars(range: TimeRange = this.timeSrv.timeRange()) {
+    const msRange = range.to.diff(range.from);
+    const sRange = Math.round(msRange / 1000);
+    return {
+      __range_ms: { text: msRange, value: msRange },
+      __range_s: { text: sRange, value: sRange },
+      __range: { text: sRange + 's', value: sRange + 's' },
+    };
+  }
+
   interpolateVariablesInQueries(queries: LokiQuery[], scopedVars: ScopedVars): LokiQuery[] {
     let expandedQueries = queries;
     if (queries && queries.length) {
@@ -289,11 +305,11 @@ export class LokiDatasource extends DataSourceApi<LokiQuery, LokiOptions> {
 
   getTimeRangeParams() {
     const timeRange = this.timeSrv.timeRange();
-    return { from: timeRange.from.valueOf() * NS_IN_MS, to: timeRange.to.valueOf() * NS_IN_MS };
+    return { start: timeRange.from.valueOf() * NS_IN_MS, end: timeRange.to.valueOf() * NS_IN_MS };
   }
 
-  async importQueries(queries: LokiQuery[], originMeta: PluginMeta): Promise<LokiQuery[]> {
-    return this.languageProvider.importQueries(queries, originMeta.id);
+  async importQueries(queries: DataQuery[], originDataSource: DataSourceApi): Promise<LokiQuery[]> {
+    return this.languageProvider.importQueries(queries, originDataSource);
   }
 
   async metadataRequest(url: string, params?: Record<string, string | number>) {
@@ -305,6 +321,7 @@ export class LokiDatasource extends DataSourceApi<LokiQuery, LokiOptions> {
     if (!query) {
       return Promise.resolve([]);
     }
+
     const interpolated = this.templateSrv.replace(query, {}, this.interpolateQueryExpr);
     return await this.processMetricFindQuery(interpolated);
   }
@@ -313,30 +330,62 @@ export class LokiDatasource extends DataSourceApi<LokiQuery, LokiOptions> {
     const labelNamesRegex = /^label_names\(\)\s*$/;
     const labelValuesRegex = /^label_values\((?:(.+),\s*)?([a-zA-Z_][a-zA-Z0-9_]*)\)\s*$/;
 
-    const params = this.getTimeRangeParams();
     const labelNames = query.match(labelNamesRegex);
     if (labelNames) {
-      return await this.labelNamesQuery(params);
+      return await this.labelNamesQuery();
     }
 
     const labelValues = query.match(labelValuesRegex);
     if (labelValues) {
-      return await this.labelValuesQuery(labelValues[2], params);
+      // If we have query expr, use /series endpoint
+      if (labelValues[1]) {
+        return await this.labelValuesSeriesQuery(labelValues[1], labelValues[2]);
+      }
+      return await this.labelValuesQuery(labelValues[2]);
     }
 
     return Promise.resolve([]);
   }
 
-  async labelNamesQuery(params?: Record<string, string | number>) {
+  async labelNamesQuery() {
     const url = `${LOKI_ENDPOINT}/label`;
+    const params = this.getTimeRangeParams();
     const result = await this.metadataRequest(url, params);
     return result.map((value: string) => ({ text: value }));
   }
 
-  async labelValuesQuery(label: string, params?: Record<string, string | number>) {
+  async labelValuesQuery(label: string) {
+    const params = this.getTimeRangeParams();
     const url = `${LOKI_ENDPOINT}/label/${label}/values`;
     const result = await this.metadataRequest(url, params);
     return result.map((value: string) => ({ text: value }));
+  }
+
+  async labelValuesSeriesQuery(expr: string, label: string) {
+    const timeParams = this.getTimeRangeParams();
+    const params = {
+      ...timeParams,
+      match: expr,
+    };
+    const url = `${LOKI_ENDPOINT}/series`;
+    const streams = new Set();
+    const result = await this.metadataRequest(url, params);
+    result.forEach((stream: { [key: string]: string }) => {
+      if (stream[label]) {
+        streams.add({ text: stream[label] });
+      }
+    });
+
+    return Array.from(streams);
+  }
+
+  // By implementing getTagKeys and getTagValues we add ad-hoc filtters functionality
+  async getTagKeys() {
+    return await this.labelNamesQuery();
+  }
+
+  async getTagValues(options: any = {}) {
+    return await this.labelValuesQuery(options.key);
   }
 
   interpolateQueryExpr(value: any, variable: any) {
@@ -357,11 +406,21 @@ export class LokiDatasource extends DataSourceApi<LokiQuery, LokiOptions> {
     let expression = query.expr ?? '';
     switch (action.type) {
       case 'ADD_FILTER': {
-        expression = addLabelToQuery(expression, action.key, action.value, undefined, true);
+        // Temporary fix for log queries that use parser. We don't know which labels are parsed and which are actual labels.
+        // If query has parser, we treat all labels as parsed and use | key="value" syntax (same in ADD_FILTER_OUT)
+        if (queryHasPipeParser(expression) && !isMetricsQuery(expression)) {
+          expression = addParsedLabelToQuery(expression, action.key, action.value, '=');
+        } else {
+          expression = addLabelToQuery(expression, action.key, action.value, undefined, true);
+        }
         break;
       }
       case 'ADD_FILTER_OUT': {
-        expression = addLabelToQuery(expression, action.key, action.value, '!=', true);
+        if (queryHasPipeParser(expression) && !isMetricsQuery(expression)) {
+          expression = addParsedLabelToQuery(expression, action.key, action.value, '!=');
+        } else {
+          expression = addLabelToQuery(expression, action.key, action.value, '!=', true);
+        }
         break;
       }
       default:
@@ -492,8 +551,8 @@ export class LokiDatasource extends DataSourceApi<LokiQuery, LokiOptions> {
       .toPromise();
   }
 
-  async annotationQuery(options: AnnotationQueryRequest<LokiQuery>): Promise<AnnotationEvent[]> {
-    const { expr, maxLines, instant } = options.annotation;
+  async annotationQuery(options: any): Promise<AnnotationEvent[]> {
+    const { expr, maxLines, instant, tagKeys = '', titleFormat = '', textFormat = '' } = options.annotation;
 
     if (!expr) {
       return [];
@@ -506,26 +565,40 @@ export class LokiDatasource extends DataSourceApi<LokiQuery, LokiOptions> {
       : await this.runRangeQuery(query, options as any).toPromise();
 
     const annotations: AnnotationEvent[] = [];
+    const splitKeys: string[] = tagKeys.split(',').filter((v: string) => v !== '');
 
     for (const frame of data) {
-      const tags: string[] = [];
+      const labels: { [key: string]: string } = {};
       for (const field of frame.fields) {
         if (field.labels) {
-          tags.push.apply(tags, [
-            ...new Set(
-              Object.values(field.labels)
-                .map((label: string) => label.trim())
-                .filter((label: string) => label !== '')
-            ),
-          ]);
+          for (const [key, value] of Object.entries(field.labels)) {
+            labels[key] = String(value).trim();
+          }
         }
       }
+
+      const tags: string[] = [
+        ...new Set(
+          Object.entries(labels).reduce((acc: string[], [key, val]) => {
+            if (val === '') {
+              return acc;
+            }
+            if (splitKeys.length && !splitKeys.includes(key)) {
+              return acc;
+            }
+            acc.push.apply(acc, [val]);
+            return acc;
+          }, [])
+        ),
+      ];
+
       const view = new DataFrameView<{ ts: string; line: string }>(frame);
 
       view.forEach((row) => {
         annotations.push({
           time: new Date(row.ts).valueOf(),
-          text: row.line,
+          title: renderTemplate(titleFormat, labels),
+          text: renderTemplate(textFormat, labels) || row.line,
           tags,
         });
       });
@@ -564,6 +637,32 @@ export class LokiDatasource extends DataSourceApi<LokiQuery, LokiOptions> {
     // The min interval is set to 1ms
     return Math.max(interval, 1);
   }
+
+  addAdHocFilters(queryExpr: string) {
+    const adhocFilters = this.templateSrv.getAdhocFilters(this.name);
+    let expr = queryExpr;
+
+    expr = adhocFilters.reduce((acc: string, filter: { key?: any; operator?: any; value?: any }) => {
+      const { key, operator } = filter;
+      let { value } = filter;
+      if (operator === '=~' || operator === '!~') {
+        value = lokiRegularEscape(value);
+      }
+      return addLabelToQuery(acc, key, value, operator);
+    }, expr);
+
+    return expr;
+  }
+}
+
+export function renderTemplate(aliasPattern: string, aliasData: { [key: string]: string }) {
+  const aliasRegex = /\{\{\s*(.+?)\s*\}\}/g;
+  return aliasPattern.replace(aliasRegex, (_match, g1) => {
+    if (aliasData[g1]) {
+      return aliasData[g1];
+    }
+    return '';
+  });
 }
 
 export function lokiRegularEscape(value: any) {

@@ -16,12 +16,13 @@ Each data source has a specific Query Editor that is customized for the features
 
 The following data sources are officially supported:
 
+- [Alertmanager]({{< relref "alertmanager.md" >}})
 - [AWS CloudWatch]({{< relref "cloudwatch.md" >}})
-- [Azure Monitor]({{< relref "azuremonitor.md" >}})
+- [Azure Monitor]({{< relref "azuremonitor/_index.md" >}})
 - [Elasticsearch]({{< relref "elasticsearch.md" >}})
 - [Google Cloud Monitoring]({{< relref "google-cloud-monitoring/_index.md" >}})
 - [Graphite]({{< relref "graphite.md" >}})
-- [InfluxDB]({{< relref "influxdb.md" >}})
+- [InfluxDB]({{< relref "influxdb/_index.md" >}})
 - [Loki]({{< relref "loki.md" >}})
 - [Microsoft SQL Server (MSSQL)]({{< relref "mssql.md" >}})
 - [MySQL]({{< relref "mysql.md" >}})
@@ -45,4 +46,3 @@ In addition to the data sources that you have configured in your Grafana, there 
 ## Data source plugins
 
 Since Grafana 3.0 you can install data sources as plugins. Check out [Grafana.com/plugins](https://grafana.com/plugins) for more data sources.
-

@@ -8,11 +8,13 @@ import (
 
 	"github.com/grafana/grafana/pkg/api/datasource"
 	"github.com/grafana/grafana/pkg/api/pluginproxy"
+	"github.com/grafana/grafana/pkg/infra/httpclient"
 	"github.com/grafana/grafana/pkg/infra/metrics"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/plugins"
 	"github.com/grafana/grafana/pkg/registry"
 	"github.com/grafana/grafana/pkg/services/datasources"
+	"github.com/grafana/grafana/pkg/services/oauthtoken"
 	"github.com/grafana/grafana/pkg/setting"
 )
 
@@ -25,6 +27,8 @@ type DatasourceProxyService struct {
 	PluginRequestValidator models.PluginRequestValidator `inject:""`
 	PluginManager          plugins.Manager               `inject:""`
 	Cfg                    *setting.Cfg                  `inject:""`
+	HTTPClientProvider     httpclient.Provider           `inject:""`
+	OAuthTokenService      *oauthtoken.Service           `inject:""`
 }
 
 func (p *DatasourceProxyService) Init() error {
@@ -44,6 +48,10 @@ func (p *DatasourceProxyService) ProxyDatasourceRequestWithID(c *models.ReqConte
 			c.JsonApiErr(http.StatusForbidden, "Access denied to datasource", err)
 			return
 		}
+		if errors.Is(err, models.ErrDataSourceNotFound) {
+			c.JsonApiErr(http.StatusNotFound, "Unable to find datasource", err)
+			return
+		}
 		c.JsonApiErr(http.StatusInternalServerError, "Unable to load datasource meta data", err)
 		return
 	}
@@ -57,12 +65,12 @@ func (p *DatasourceProxyService) ProxyDatasourceRequestWithID(c *models.ReqConte
 	// find plugin
 	plugin := p.PluginManager.GetDataSource(ds.Type)
 	if plugin == nil {
-		c.JsonApiErr(http.StatusInternalServerError, "Unable to find datasource plugin", err)
+		c.JsonApiErr(http.StatusNotFound, "Unable to find datasource plugin", err)
 		return
 	}
 
 	proxyPath := getProxyPath(c)
-	proxy, err := pluginproxy.NewDataSourceProxy(ds, plugin, c, proxyPath, p.Cfg)
+	proxy, err := pluginproxy.NewDataSourceProxy(ds, plugin, c, proxyPath, p.Cfg, p.HTTPClientProvider, p.OAuthTokenService)
 	if err != nil {
 		if errors.Is(err, datasource.URLValidationError{}) {
 			c.JsonApiErr(http.StatusBadRequest, fmt.Sprintf("Invalid data source URL: %q", ds.Url), err)

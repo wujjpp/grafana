@@ -47,7 +47,7 @@ const ResourceGroupsField: React.FC<AzureQueryEditorFieldProps> = ({
           resourceName: undefined,
           metricNamespace: undefined,
           metricName: undefined,
-          aggregation: 'None',
+          aggregation: undefined,
           timeGrain: '',
           dimensionFilters: [],
         },
@@ -62,7 +62,7 @@ const ResourceGroupsField: React.FC<AzureQueryEditorFieldProps> = ({
     <Field label="Resource group">
       <Select
         inputId="azure-monitor-metrics-resource-group-field"
-        value={findOption(resourceGroups, query.azureMonitor.resourceGroup)}
+        value={findOption(resourceGroups, query.azureMonitor?.resourceGroup)}
         onChange={handleChange}
         options={options}
         width={38}

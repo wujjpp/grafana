@@ -1,4 +1,4 @@
-import { DataFrameFieldIndex, FALLBACK_COLOR, FieldColorMode, GrafanaTheme, ThresholdsConfig } from '@grafana/data';
+import { DataFrameFieldIndex, FALLBACK_COLOR, FieldColorMode, GrafanaTheme2, ThresholdsConfig } from '@grafana/data';
 import tinycolor from 'tinycolor2';
 import uPlot, { Series } from 'uplot';
 import {
@@ -23,14 +23,13 @@ export interface SeriesProps extends LineConfig, BarConfig, FillConfig, PointsCo
   thresholds?: ThresholdsConfig;
   /** Used when gradientMode is set to Scheme  */
   colorMode?: FieldColorMode;
-  fieldName: string;
   drawStyle?: DrawStyle;
   pathBuilder?: Series.PathBuilder;
+  pointsFilter?: Series.Points.Filter;
   pointsBuilder?: Series.Points.Show;
   show?: boolean;
   dataFrameFieldIndex?: DataFrameFieldIndex;
-  hideInLegend?: boolean;
-  theme: GrafanaTheme;
+  theme: GrafanaTheme2;
 }
 
 export class UPlotSeriesBuilder extends PlotConfigBuilder<SeriesProps, Series> {
@@ -39,12 +38,14 @@ export class UPlotSeriesBuilder extends PlotConfigBuilder<SeriesProps, Series> {
       drawStyle,
       pathBuilder,
       pointsBuilder,
+      pointsFilter,
       lineInterpolation,
       lineWidth,
       lineStyle,
       barAlignment,
+      barWidthFactor,
+      barMaxWidth,
       showPoints,
-      pointColor,
       pointSize,
       scaleKey,
       pxAlign,
@@ -53,15 +54,16 @@ export class UPlotSeriesBuilder extends PlotConfigBuilder<SeriesProps, Series> {
     } = this.props;
 
     let lineConfig: Partial<Series> = {};
+    const lineColor = this.getLineColor();
 
     if (pathBuilder != null) {
       lineConfig.paths = pathBuilder;
-      lineConfig.stroke = this.getLineColor();
+      lineConfig.stroke = lineColor;
       lineConfig.width = lineWidth;
     } else if (drawStyle === DrawStyle.Points) {
       lineConfig.paths = () => null;
     } else if (drawStyle != null) {
-      lineConfig.stroke = this.getLineColor();
+      lineConfig.stroke = lineColor;
       lineConfig.width = lineWidth;
       if (lineStyle && lineStyle.fill !== 'solid') {
         if (lineStyle.fill === 'dot') {
@@ -70,16 +72,23 @@ export class UPlotSeriesBuilder extends PlotConfigBuilder<SeriesProps, Series> {
         lineConfig.dash = lineStyle.dash ?? [10, 10];
       }
       lineConfig.paths = (self: uPlot, seriesIdx: number, idx0: number, idx1: number) => {
-        let pathsBuilder = mapDrawStyleToPathBuilder(drawStyle, lineInterpolation, barAlignment);
+        let pathsBuilder = mapDrawStyleToPathBuilder(
+          drawStyle,
+          lineInterpolation,
+          barAlignment,
+          barWidthFactor,
+          barMaxWidth
+        );
         return pathsBuilder(self, seriesIdx, idx0, idx1);
       };
     }
 
     const pointsConfig: Partial<Series> = {
       points: {
-        stroke: pointColor,
-        fill: pointColor,
+        stroke: lineColor,
+        fill: lineColor,
         size: pointSize,
+        filter: pointsFilter,
       },
     };
 
@@ -114,10 +123,10 @@ export class UPlotSeriesBuilder extends PlotConfigBuilder<SeriesProps, Series> {
   }
 
   private getLineColor(): Series.Stroke {
-    const { lineColor, gradientMode, colorMode, thresholds } = this.props;
+    const { lineColor, gradientMode, colorMode, thresholds, theme } = this.props;
 
     if (gradientMode === GraphGradientMode.Scheme) {
-      return getScaleGradientFn(1, colorMode, thresholds);
+      return getScaleGradientFn(1, theme, colorMode, thresholds);
     }
 
     return lineColor ?? FALLBACK_COLOR;
@@ -139,7 +148,7 @@ export class UPlotSeriesBuilder extends PlotConfigBuilder<SeriesProps, Series> {
       case GraphGradientMode.Hue:
         return getHueGradientFn((fillColor ?? lineColor)!, opacityPercent, theme);
       case GraphGradientMode.Scheme:
-        return getScaleGradientFn(opacityPercent, colorMode, thresholds);
+        return getScaleGradientFn(opacityPercent, theme, colorMode, thresholds);
       default:
         if (opacityPercent > 0) {
           return tinycolor(lineColor).setAlpha(opacityPercent).toString();
@@ -155,9 +164,7 @@ interface PathBuilders {
   smooth: Series.PathBuilder;
   stepBefore: Series.PathBuilder;
   stepAfter: Series.PathBuilder;
-  bars: Series.PathBuilder;
-  barsAfter: Series.PathBuilder;
-  barsBefore: Series.PathBuilder;
+  [key: string]: Series.PathBuilder;
 }
 
 let builders: PathBuilders | undefined = undefined;
@@ -165,35 +172,35 @@ let builders: PathBuilders | undefined = undefined;
 function mapDrawStyleToPathBuilder(
   style: DrawStyle,
   lineInterpolation?: LineInterpolation,
-  barAlignment?: BarAlignment
+  barAlignment = 0,
+  barWidthFactor = 0.6,
+  barMaxWidth = Infinity
 ): Series.PathBuilder {
+  const pathBuilders = uPlot.paths;
+
   if (!builders) {
     // This should be global static, but Jest initalization was failing so we lazy load to avoid the issue
-    const pathBuilders = uPlot.paths;
-    const barWidthFactor = 0.6;
-    const barMaxWidth = Infinity;
-
     builders = {
       linear: pathBuilders.linear!(),
       smooth: pathBuilders.spline!(),
       stepBefore: pathBuilders.stepped!({ align: -1 }),
       stepAfter: pathBuilders.stepped!({ align: 1 }),
-      bars: pathBuilders.bars!({ size: [barWidthFactor, barMaxWidth] }),
-      barsBefore: pathBuilders.bars!({ size: [barWidthFactor, barMaxWidth], align: -1 }),
-      barsAfter: pathBuilders.bars!({ size: [barWidthFactor, barMaxWidth], align: 1 }),
     };
   }
 
   if (style === DrawStyle.Bars) {
-    if (barAlignment === BarAlignment.After) {
-      return builders.barsAfter;
+    // each bars pathBuilder is lazy-initialized and globally cached by a key composed of its options
+    let barsCfgKey = `bars|${barAlignment}|${barWidthFactor}|${barMaxWidth}`;
+
+    if (!builders[barsCfgKey]) {
+      builders[barsCfgKey] = pathBuilders.bars!({
+        size: [barWidthFactor, barMaxWidth],
+        align: barAlignment as BarAlignment,
+      });
     }
-    if (barAlignment === BarAlignment.Before) {
-      return builders.barsBefore;
-    }
-    return builders.bars;
-  }
-  if (style === DrawStyle.Line) {
+
+    return builders[barsCfgKey];
+  } else if (style === DrawStyle.Line) {
     if (lineInterpolation === LineInterpolation.StepBefore) {
       return builders.stepBefore;
     }

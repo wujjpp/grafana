@@ -44,9 +44,19 @@ export interface AnnotationEvent {
   type?: string;
   tags?: string[];
   color?: string;
+  alertId?: number;
+  newState?: string;
 
   // Currently used to merge annotations from alerts and dashboard
   source?: any; // source.type === 'dashboard'
+}
+
+export interface AnnotationEventUIModel {
+  id?: string;
+  from: number;
+  to: number;
+  tags: string[];
+  description: string;
 }
 
 /**

@@ -71,6 +71,9 @@ func (uss *UsageStatsService) GetUsageReport(ctx context.Context) (UsageReport, 
 	metrics["stats.total_auth_token.count"] = statsQuery.Result.AuthTokens
 	metrics["stats.dashboard_versions.count"] = statsQuery.Result.DashboardVersions
 	metrics["stats.annotations.count"] = statsQuery.Result.Annotations
+	metrics["stats.alert_rules.count"] = statsQuery.Result.AlertRules
+	metrics["stats.library_panels.count"] = statsQuery.Result.LibraryPanels
+	metrics["stats.library_variables.count"] = statsQuery.Result.LibraryVariables
 	validLicCount := 0
 	if uss.License.HasValidLicense() {
 		validLicCount = 1
@@ -106,7 +109,7 @@ func (uss *UsageStatsService) GetUsageReport(ctx context.Context) (UsageReport, 
 	// as sending that name could be sensitive information
 	dsOtherCount := 0
 	for _, dsStat := range dsStats.Result {
-		if uss.shouldBeReported(dsStat.Type) {
+		if uss.ShouldBeReported(dsStat.Type) {
 			metrics["stats.ds."+dsStat.Type+".count"] = dsStat.Count
 		} else {
 			dsOtherCount += dsStat.Count
@@ -149,7 +152,7 @@ func (uss *UsageStatsService) GetUsageReport(ctx context.Context) (UsageReport, 
 
 	alertingOtherCount := 0
 	for dsType, usageCount := range alertingUsageStats.DatasourceUsage {
-		if uss.shouldBeReported(dsType) {
+		if uss.ShouldBeReported(dsType) {
 			addAlertingUsageStats(dsType, usageCount)
 		} else {
 			alertingOtherCount += usageCount
@@ -176,7 +179,7 @@ func (uss *UsageStatsService) GetUsageReport(ctx context.Context) (UsageReport, 
 
 		access := strings.ToLower(dsAccessStat.Access)
 
-		if uss.shouldBeReported(dsAccessStat.Type) {
+		if uss.ShouldBeReported(dsAccessStat.Type) {
 			metrics["stats.ds_access."+dsAccessStat.Type+"."+access+".count"] = dsAccessStat.Count
 		} else {
 			old := dsAccessOtherCount[access]
@@ -237,18 +240,21 @@ func (uss *UsageStatsService) GetUsageReport(ctx context.Context) (UsageReport, 
 }
 
 func (uss *UsageStatsService) registerExternalMetrics(metrics map[string]interface{}) {
-	for name, fn := range uss.externalMetrics {
-		result, err := fn()
+	for _, fn := range uss.externalMetrics {
+		fnMetrics, err := fn()
 		if err != nil {
-			metricsLogger.Error("Failed to fetch external metric", "name", name, "error", err)
+			metricsLogger.Error("Failed to fetch external metrics", "error", err)
 			continue
 		}
-		metrics[name] = result
+
+		for name, value := range fnMetrics {
+			metrics[name] = value
+		}
 	}
 }
 
-func (uss *UsageStatsService) RegisterMetric(name string, fn MetricFunc) {
-	uss.externalMetrics[name] = fn
+func (uss *UsageStatsService) RegisterMetricsFunc(fn MetricsFunc) {
+	uss.externalMetrics = append(uss.externalMetrics, fn)
 }
 
 func (uss *UsageStatsService) sendUsageStats(ctx context.Context) error {
@@ -315,6 +321,9 @@ func (uss *UsageStatsService) updateTotalStats() {
 	metrics.StatsTotalActiveAdmins.Set(float64(statsQuery.Result.ActiveAdmins))
 	metrics.StatsTotalDashboardVersions.Set(float64(statsQuery.Result.DashboardVersions))
 	metrics.StatsTotalAnnotations.Set(float64(statsQuery.Result.Annotations))
+	metrics.StatsTotalAlertRules.Set(float64(statsQuery.Result.AlertRules))
+	metrics.StatsTotalLibraryPanels.Set(float64(statsQuery.Result.LibraryPanels))
+	metrics.StatsTotalLibraryVariables.Set(float64(statsQuery.Result.LibraryVariables))
 
 	dsStats := models.GetDataSourceStatsQuery{}
 	if err := uss.Bus.Dispatch(&dsStats); err != nil {
@@ -327,7 +336,7 @@ func (uss *UsageStatsService) updateTotalStats() {
 	}
 }
 
-func (uss *UsageStatsService) shouldBeReported(dsType string) bool {
+func (uss *UsageStatsService) ShouldBeReported(dsType string) bool {
 	ds := uss.PluginManager.GetDataSource(dsType)
 	if ds == nil {
 		return false

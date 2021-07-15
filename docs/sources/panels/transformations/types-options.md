@@ -1,29 +1,28 @@
 +++
-title = "Transformation types and options"
-weight = 300
+title = "Types and options"
+weight = 2
 +++
 
 # Transformation types and options
 
 Grafana comes with the following transformations:
 
-- [Transformation types and options](#transformation-types-and-options)
-  - [Reduce](#reduce)
-  - [Merge](#merge)
-  - [Filter data by name](#filter-data-by-name)
-  - [Filter data by query](#filter-data-by-query)
-  - [Organize fields](#organize-fields)
-  - [Join by field (outer join)](#join-by-field-outer-join)
-  - [Add field from calculation](#add-field-from-calculation)
-  - [Labels to fields](#labels-to-fields)
-    - [Value field name](#value-field-name)
-    - [Merging behavior](#merging-behavior)
-  - [Sort by](#sort-by)
-  - [Group by](#group-by)
-  - [Concatenate fields](#concatenate-fields)
-  - [Series to rows](#series-to-rows)
-  - [Filter data by value](#filter-data-by-value)
-  - [Rename by regex](#rename-by-regex)
+- [Add field from calculation]({{< relref "./types-options.md#add-field-from-calculation" >}})
+- [Concatenate fields]({{< relref "./types-options.md#concatenate-fields" >}})
+- [Config from query results]({{< relref "./config-from-query.md" >}})
+- [Filter data by name]({{< relref "./types-options.md#filter-data-by-name" >}})
+- [Filter data by query]({{< relref "./types-options.md#filter-data-by-query" >}})
+- [Filter data by value]({{< relref "./types-options.md#filter-data-by-value" >}})
+- [Group by]({{< relref "./types-options.md#group-by" >}})
+- [Labels to fields]({{< relref "./types-options.md#labels-to-fields" >}})
+- [Merge]({{< relref "./types-options.md#merge" >}})
+- [Organize fields]({{< relref "./types-options.md#organize-fields" >}})
+- [Outer join]({{< relref "./types-options.md#join-by-field-outer-join" >}})
+- [Reduce]({{< relref "./types-options.md#reduce" >}})
+- [Rename by regex]({{< relref "./types-options.md#rename-by-regex" >}})
+- [Rows to fields]({{< relref "./rows-to-fields" >}})
+- [Series to rows]({{< relref "./types-options.md#series-to-rows" >}})
+- [Sort by]({{< relref "./types-options.md#sort-by" >}})
 
 Keep reading for detailed descriptions of each type of transformation and the options available for each, as well as suggestions on how to use them.
 
@@ -81,8 +80,6 @@ Query B:
 
 ## Merge
 
-> **Note:** This transformation is available in Grafana 7.1+.
-
 Use this transformation to combine the result from multiple queries into one single result. This is helpful when using the table panel visualization. Values that can be merged are combined into the same row. Values are mergeable if the shared fields contain the same data. For information, refer to [Table panel]({{< relref "../visualizations/table/_index.md" >}}).
 
 In the example below, we have two queries returning table data. It is visualized as two separate tables before applying the transformation.
@@ -123,15 +120,15 @@ In the example below, I removed the Min field from the results.
 
 Here is the original query table. (This is streaming data, so numbers change over time and between screenshots.)
 
-{{< docs-imagebox img="/img/docs/transformations/filter-name-table-before-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
+{{< figure src="/static/img/docs/transformations/filter-name-table-before-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
 
 Here is the table after I applied the transformation to remove the Min field.
 
-{{< docs-imagebox img="/img/docs/transformations/filter-name-table-after-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
+{{< figure src="/static/img/docs/transformations/filter-name-table-after-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
 
 Here is the same query using a Stat visualization.
 
-{{< docs-imagebox img="/img/docs/transformations/filter-name-stat-after-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
+{{< figure src="/static/img/docs/transformations/filter-name-stat-after-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
 
 ## Filter data by query
 
@@ -141,7 +138,7 @@ Grafana displays the query identification letters in dark gray text. Click a que
 
 In the example below, the panel has three queries (A, B, C). I removed the B query from the visualization.
 
-{{< docs-imagebox img="/img/docs/transformations/filter-by-query-stat-example-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
+{{< figure src="/static/img/docs/transformations/filter-by-query-stat-example-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
 
 > **Note:** This transformation is not available for Graphite because this data source does not support correlating returned data with queries.
 
@@ -159,7 +156,7 @@ Grafana displays a list of fields returned by the query. You can:
 
 In the example below, I hid the value field and renamed Max and Min.
 
-{{< docs-imagebox img="/img/docs/transformations/organize-fields-stat-example-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
+{{< figure src="/static/img/docs/transformations/organize-fields-stat-example-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
 
 ## Join by field (outer join)
 
@@ -169,11 +166,11 @@ This transformation is especially useful if you want to combine queries so that 
 
 In the example below, I have a template query displaying time series data from multiple servers in a table visualization. I can only view the results of one query at a time.
 
-{{< docs-imagebox img="/img/docs/transformations/join-fields-before-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
+{{< figure src="/static/img/docs/transformations/join-fields-before-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
 
 I applied a transformation to join the query results using the time field. Now I can run calculations, combine, and organize the results in this new table.
 
-{{< docs-imagebox img="/img/docs/transformations/join-fields-after-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
+{{< figure src="/static/img/docs/transformations/join-fields-after-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
 
 ## Add field from calculation
 
@@ -190,7 +187,7 @@ Use this transformation to add a new field calculated from two other fields. Eac
 
 In the example below, I added two fields together and named them Sum.
 
-{{< docs-imagebox img="/img/docs/transformations/add-field-from-calc-stat-example-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
+{{< figure src="/static/img/docs/transformations/add-field-from-calc-stat-example-7-0.png" class="docs-image--no-shadow" max-width= "1100px" >}}
 
 ## Labels to fields
 
@@ -244,15 +241,11 @@ After merge:
 
 ## Sort by
 
-> **Note:** This transformation is available in Grafana 7.4+.
-
 This transformation will sort each frame by the configured field, When `reverse` is checked, the values will return in
 the opposite order.
 
 
 ## Group by
-
-> **Note:** This transformation is available in Grafana 7.2+.
 
 This transformation groups the data by a specified field (column) value and processes calculations on each group. Click to see a list of calculation choices. For information about available calculations, refer to the [List of calculations]({{< relref "../calculations-list.md" >}}).
 
@@ -311,8 +304,6 @@ We would then get :
 This transformation allows you to extract some key information out of your time series and display them in a convenient way.
 
 ## Concatenate fields
-
-> **Note:** This transformation is available in Grafana 7.3+.
 
 This transformation combines all fields from all frames into one result.  Consider:
 
@@ -373,8 +364,6 @@ Here is the result after applying the Series to rows transformation.
 | 2020-07-07 09:30:05 | Temperature | 19    |
 
 ## Filter data by value
-
-> **Note:** This transformation is available in Grafana 7.4+.
 
 This transformation allows you to filter your data directly in Grafana and remove some data points from your query result. You have the option to include or exclude data that match one or more conditions you define. The conditions are applied on a selected field.
 
@@ -437,16 +426,14 @@ Conditions that are invalid or incompletely configured are ignored.
 
 ## Rename by regex
 
-> **Note:** This transformation is available in Grafana 7.4+.
-
 Use this transformation to rename parts of the query results using a regular expression and replacement pattern.
 
 You can specify a regular expression, which is only applied to matches, along with a replacement pattern that support back references. For example, let's imagine you're visualizing CPU usage per host and you want to remove the domain name. You could set the regex to `([^\.]+)\..+` and the replacement pattern to `$1`, `web-01.example.com` would become `web-01`.
 
 In the following example, we are stripping the prefix from event types. In the before image, you can see everything is prefixed with `system.`
 
-{{< docs-imagebox img="/img/docs/transformations/rename-by-regex-before-7-3.png" class="docs-image--no-shadow" max-width= "1100px" >}}
+{{< figure src="/static/img/docs/transformations/rename-by-regex-before-7-3.png" class="docs-image--no-shadow" max-width= "1100px" >}}
 
 With the transformation applied, you can see we are left with just the remainder of the string.
 
-{{< docs-imagebox img="/img/docs/transformations/rename-by-regex-after-7-3.png" class="docs-image--no-shadow" max-width= "1100px" >}}
+{{< figure src="/static/img/docs/transformations/rename-by-regex-after-7-3.png" class="docs-image--no-shadow" max-width= "1100px" >}}

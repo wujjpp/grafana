@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { chain } from 'lodash';
 import { TimeSrv } from 'app/features/dashboard/services/TimeSrv';
 import { getTemplateSrv, TemplateSrv } from 'app/features/templating/template_srv';
 import coreModule from 'app/core/core_module';
@@ -7,7 +7,6 @@ import {
   DataFrame,
   DataLink,
   DataLinkBuiltInVars,
-  DataLinkClickEvent,
   deprecationWarning,
   Field,
   FieldType,
@@ -110,7 +109,7 @@ const getFieldVars = (dataFrames: DataFrame[]) => {
     }
   }
 
-  const labels = _.chain(all).flatten().uniq().value();
+  const labels = chain(all).flatten().uniq().value();
 
   return [
     {
@@ -313,30 +312,26 @@ export class LinkSrv implements LinkService {
       });
     }
 
-    let onClick: ((event: DataLinkClickEvent) => void) | undefined = undefined;
-
-    if (link.onClick) {
-      onClick = (e: DataLinkClickEvent) => {
-        if (link.onClick) {
-          link.onClick({
-            origin,
-            replaceVariables,
-            e,
-          });
-        }
-      };
-    }
-
     const info: LinkModel<T> = {
       href: locationUtil.assureBaseUrl(href.replace(/\n/g, '')),
-      title: replaceVariables ? replaceVariables(link.title || '') : link.title,
+      title: link.title ?? '',
       target: link.targetBlank ? '_blank' : undefined,
       origin,
-      onClick,
     };
 
     if (replaceVariables) {
       info.href = replaceVariables(info.href);
+      info.title = replaceVariables(link.title);
+    }
+
+    if (link.onClick) {
+      info.onClick = (e) => {
+        link.onClick!({
+          origin,
+          replaceVariables,
+          e,
+        });
+      };
     }
 
     info.href = getConfig().disableSanitizeHtml ? info.href : textUtil.sanitizeUrl(info.href);

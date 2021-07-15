@@ -24,6 +24,7 @@ export const defaultPanelOptions: PanelOptions = {
 
 export interface PanelFieldConfig {
   width?: number;
+  minWidth?: number;
   align?: string;
   displayMode?: TableCellDisplayMode;
   filterable?: boolean;
@@ -31,4 +32,5 @@ export interface PanelFieldConfig {
 
 export const defaultPanelFieldConfig: PanelFieldConfig = {
   displayMode: TableCellDisplayMode.Auto,
+  align: 'auto',
 };

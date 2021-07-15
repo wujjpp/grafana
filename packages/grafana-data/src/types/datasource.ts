@@ -76,7 +76,7 @@ export class DataSourcePlugin<
     return this;
   }
 
-  setQueryEditorHelp(QueryEditorHelp: ComponentType<QueryEditorHelpProps>) {
+  setQueryEditorHelp(QueryEditorHelp: ComponentType<QueryEditorHelpProps<TQuery>>) {
     this.components.QueryEditorHelp = QueryEditorHelp;
     return this;
   }
@@ -84,7 +84,7 @@ export class DataSourcePlugin<
   /**
    * @deprecated prefer using `setQueryEditorHelp`
    */
-  setExploreStartPage(ExploreStartPage: ComponentType<QueryEditorHelpProps>) {
+  setExploreStartPage(ExploreStartPage: ComponentType<QueryEditorHelpProps<TQuery>>) {
     return this.setQueryEditorHelp(ExploreStartPage);
   }
 
@@ -127,6 +127,7 @@ export interface DataSourcePluginMeta<T extends KeyValue = {}> extends PluginMet
   sort?: number;
   streaming?: boolean;
   unlicensed?: boolean;
+  isBackend?: boolean;
 }
 
 interface PluginMetaQueryOptions {
@@ -148,7 +149,7 @@ export interface DataSourcePluginComponents<
   ExploreQueryField?: ComponentType<ExploreQueryFieldProps<DSType, TQuery, TOptions>>;
   ExploreMetricsQueryField?: ComponentType<ExploreQueryFieldProps<DSType, TQuery, TOptions>>;
   ExploreLogsQueryField?: ComponentType<ExploreQueryFieldProps<DSType, TQuery, TOptions>>;
-  QueryEditorHelp?: ComponentType<QueryEditorHelpProps>;
+  QueryEditorHelp?: ComponentType<QueryEditorHelpProps<TQuery>>;
   ConfigEditor?: ComponentType<DataSourcePluginOptionsEditorProps<TOptions, TSecureOptions>>;
   MetadataInspector?: ComponentType<MetadataInspectorProps<DSType, TQuery, TOptions>>;
 }
@@ -170,7 +171,8 @@ export interface DataSourceConstructor<
  */
 abstract class DataSourceApi<
   TQuery extends DataQuery = DataQuery,
-  TOptions extends DataSourceJsonData = DataSourceJsonData
+  TOptions extends DataSourceJsonData = DataSourceJsonData,
+  TQueryImportConfiguration extends Record<string, object> = {}
 > {
   /**
    *  Set in constructor
@@ -208,7 +210,12 @@ abstract class DataSourceApi<
   /**
    * Imports queries from a different datasource
    */
-  importQueries?(queries: TQuery[], originMeta: PluginMeta): Promise<TQuery[]>;
+  async importQueries?(queries: DataQuery[], originDataSource: DataSourceApi<DataQuery>): Promise<TQuery[]>;
+
+  /**
+   * Returns configuration for importing queries from other data sources
+   */
+  getImportQueryConfiguration?(): TQueryImportConfiguration;
 
   /**
    * Initializes a datasource after instantiation
@@ -221,7 +228,11 @@ abstract class DataSourceApi<
   abstract query(request: DataQueryRequest<TQuery>): Promise<DataQueryResponse> | Observable<DataQueryResponse>;
 
   /**
-   * Test & verify datasource settings & connection details
+   * Test & verify datasource settings & connection details (returning TestingStatus)
+   *
+   * When verification fails - errors specific to the data source should be handled here and converted to
+   * a TestingStatus object. Unknown errors and HTTP errors can be re-thrown and will be handled here:
+   * public/app/features/datasources/state/actions.ts
    */
   abstract testDatasource(): Promise<any>;
 
@@ -360,6 +371,7 @@ export interface QueryEditorProps<
   exploreId?: any;
   history?: HistoryItem[];
   queries?: DataQuery[];
+  app?: CoreApp;
 }
 
 // TODO: not really needed but used as type in some data sources and in DataQueryRequest
@@ -379,9 +391,9 @@ export interface ExploreQueryFieldProps<
   exploreId?: any;
 }
 
-export interface QueryEditorHelpProps {
-  datasource: DataSourceApi;
-  onClickExample: (query: DataQuery) => void;
+export interface QueryEditorHelpProps<TQuery extends DataQuery = DataQuery> {
+  datasource: DataSourceApi<TQuery>;
+  onClickExample: (query: TQuery) => void;
   exploreId?: any;
 }
 
@@ -464,7 +476,13 @@ export enum DataQueryErrorType {
 
 export interface DataQueryError {
   data?: {
+    /**
+     * Short information about the error
+     */
     message?: string;
+    /**
+     * Detailed information about the error. Only returned when app_mode is development.
+     */
     error?: string;
   };
   message?: string;
@@ -532,6 +550,7 @@ export interface DataSourceJsonData {
   authType?: string;
   defaultRegion?: string;
   profile?: string;
+  manageAlerts?: boolean;
 }
 
 /**
@@ -540,6 +559,7 @@ export interface DataSourceJsonData {
  */
 export interface DataSourceSettings<T extends DataSourceJsonData = DataSourceJsonData, S = {}> {
   id: number;
+  uid: string;
   orgId: number;
   name: string;
   typeLogoUrl: string;

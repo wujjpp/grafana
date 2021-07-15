@@ -1,15 +1,18 @@
 import { DataQueryRequest, DataSourceInstanceSettings, ScopedVars, MetricFindValue } from '@grafana/data';
 import { getBackendSrv, getTemplateSrv, DataSourceWithBackend } from '@grafana/runtime';
-import _, { isString } from 'lodash';
+import { isString } from 'lodash';
 
 import TimegrainConverter from '../time_grain_converter';
-import { AzureDataSourceJsonData, AzureMonitorQuery, AzureQueryType } from '../types';
+import { AzureDataSourceJsonData, AzureMonitorQuery, AzureQueryType, DatasourceValidationResult } from '../types';
 import ResponseParser from './response_parser';
+import { getAzureCloud } from '../credentials';
+import { getAppInsightsApiRoute } from '../api/routes';
 
 export interface LogAnalyticsColumn {
   text: string;
   value: string;
 }
+
 export default class AppInsightsDatasource extends DataSourceWithBackend<AzureMonitorQuery, AzureDataSourceJsonData> {
   url: string;
   baseUrl: string;
@@ -21,21 +24,9 @@ export default class AppInsightsDatasource extends DataSourceWithBackend<AzureMo
     super(instanceSettings);
     this.applicationId = instanceSettings.jsonData.appInsightsAppId || '';
 
-    switch (instanceSettings.jsonData?.cloudName) {
-      // Azure US Government
-      case 'govazuremonitor':
-        break;
-      // Azure Germany
-      case 'germanyazuremonitor':
-        break;
-      // Azue China
-      case 'chinaazuremonitor':
-        this.baseUrl = `/chinaappinsights/${this.version}/apps/${this.applicationId}`;
-        break;
-      // Azure Global
-      default:
-        this.baseUrl = `/appinsights/${this.version}/apps/${this.applicationId}`;
-    }
+    const cloud = getAzureCloud(instanceSettings);
+    const route = getAppInsightsApiRoute(cloud);
+    this.baseUrl = `/${route}/${this.version}/apps/${this.applicationId}`;
 
     this.url = instanceSettings.url || '';
   }
@@ -70,14 +61,18 @@ export default class AppInsightsDatasource extends DataSourceWithBackend<AzureMo
     };
   }
 
-  applyTemplateVariables(target: AzureMonitorQuery, scopedVars: ScopedVars): Record<string, any> {
-    const item = target.appInsights!;
+  applyTemplateVariables(target: AzureMonitorQuery, scopedVars: ScopedVars): AzureMonitorQuery {
+    const item = target.appInsights;
+
+    if (!item) {
+      return target;
+    }
 
     const old: any = item;
     // fix for timeGrainUnit which is a deprecated/removed field name
     if (old.timeGrainCount) {
       item.timeGrain = TimegrainConverter.createISO8601Duration(old.timeGrainCount, item.timeGrainUnit);
-    } else if (item.timeGrainUnit && item.timeGrain !== 'auto') {
+    } else if (item.timeGrain && item.timeGrainUnit && item.timeGrain !== 'auto') {
       item.timeGrain = TimegrainConverter.createISO8601Duration(item.timeGrain, item.timeGrainUnit);
     }
 
@@ -104,19 +99,15 @@ export default class AppInsightsDatasource extends DataSourceWithBackend<AzureMo
     const templateSrv = getTemplateSrv();
 
     return {
-      type: 'timeSeriesQuery',
       refId: target.refId,
-      format: target.format,
       queryType: AzureQueryType.ApplicationInsights,
       appInsights: {
         timeGrain: templateSrv.replace((item.timeGrain || '').toString(), scopedVars),
-        allowedTimeGrainsMs: item.allowedTimeGrainsMs,
         metricName: templateSrv.replace(item.metricName, scopedVars),
         aggregation: templateSrv.replace(item.aggregation, scopedVars),
         dimension: item.dimension.map((d) => templateSrv.replace(d, scopedVars)),
         dimensionFilter: templateSrv.replace(item.dimensionFilter, scopedVars),
         alias: item.alias,
-        format: target.format,
       },
     };
   }
@@ -142,10 +133,10 @@ export default class AppInsightsDatasource extends DataSourceWithBackend<AzureMo
     return null;
   }
 
-  testDatasource() {
+  testDatasource(): Promise<DatasourceValidationResult> {
     const url = `${this.baseUrl}/metrics/metadata`;
     return this.doRequest(url)
-      .then((response: any) => {
+      .then<DatasourceValidationResult>((response: any) => {
         if (response.status === 200) {
           return {
             status: 'success',

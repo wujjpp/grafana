@@ -18,7 +18,7 @@ const ResourceNameField: React.FC<AzureQueryEditorFieldProps> = ({
   const [resourceNames, setResourceNames] = useState<AzureMonitorOption[]>([]);
 
   useEffect(() => {
-    const { resourceGroup, metricDefinition } = query.azureMonitor;
+    const { resourceGroup, metricDefinition } = query.azureMonitor ?? {};
 
     if (!(subscriptionId && resourceGroup && metricDefinition)) {
       resourceNames.length > 0 && setResourceNames([]);
@@ -45,7 +45,7 @@ const ResourceNameField: React.FC<AzureQueryEditorFieldProps> = ({
 
           metricNamespace: undefined,
           metricName: undefined,
-          aggregation: 'None',
+          aggregation: undefined,
           timeGrain: '',
           dimensionFilters: [],
         },
@@ -56,7 +56,7 @@ const ResourceNameField: React.FC<AzureQueryEditorFieldProps> = ({
 
   const options = useMemo(() => [...resourceNames, variableOptionGroup], [resourceNames, variableOptionGroup]);
 
-  const selectedResourceNameValue = findOption(resourceNames, query.azureMonitor.resourceName);
+  const selectedResourceNameValue = findOption(resourceNames, query.azureMonitor?.resourceName);
   return (
     <Field label="Resource name">
       <Select

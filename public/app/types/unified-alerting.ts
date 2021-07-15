@@ -8,17 +8,16 @@ import {
   Labels,
   Annotations,
   RulerRuleGroupDTO,
-  GrafanaQueryModel,
+  GrafanaAlertState,
 } from './unified-alerting-dto';
 
 export type Alert = {
   activeAt: string;
   annotations: { [key: string]: string };
   labels: { [key: string]: string };
-  state: PromAlertingRuleState;
+  state: PromAlertingRuleState | GrafanaAlertState;
   value: string;
 };
-
 interface RuleBase {
   health: string;
   name: string;
@@ -82,7 +81,6 @@ export interface CombinedRule {
   rulerRule?: RulerRuleDTO;
   group: CombinedRuleGroup;
   namespace: CombinedRuleNamespace;
-  queries?: GrafanaQueryModel[];
 }
 
 export interface CombinedRuleGroup {
@@ -103,20 +101,34 @@ export interface RuleWithLocation {
   rule: RulerRuleDTO;
 }
 
+export interface PromRuleWithLocation {
+  rule: AlertingRule;
+  dataSourceName: string;
+  namespaceName: string;
+  groupName: string;
+}
+
 export interface CloudRuleIdentifier {
+  ruleSourceName: string;
+  namespace: string;
+  groupName: string;
+  rulerRuleHash: number;
+}
+export interface GrafanaRuleIdentifier {
+  uid: string;
+}
+
+// Rule read directly from Prometheus without existing in the ruler API
+export interface PrometheusRuleIdentifier {
   ruleSourceName: string;
   namespace: string;
   groupName: string;
   ruleHash: number;
 }
 
+export type RuleIdentifier = CloudRuleIdentifier | GrafanaRuleIdentifier | PrometheusRuleIdentifier;
 export interface RuleFilterState {
   queryString?: string;
   dataSource?: string;
   alertState?: string;
 }
-export interface GrafanaRuleIdentifier {
-  uid: string;
-}
-
-export type RuleIdentifier = CloudRuleIdentifier | GrafanaRuleIdentifier;

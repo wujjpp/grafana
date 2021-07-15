@@ -91,12 +91,13 @@ func (hs *HTTPServer) LoginView(c *models.ReqContext) {
 	}
 
 	enabledOAuths := make(map[string]interface{})
-	for key, oauth := range setting.OAuthService.OAuthInfos {
+	providers := hs.SocialService.GetOAuthInfoProviders()
+	for key, oauth := range providers {
 		enabledOAuths[key] = map[string]string{"name": oauth.Name}
 	}
 
 	viewData.Settings["oauth"] = enabledOAuths
-	viewData.Settings["samlEnabled"] = hs.License.HasValidLicense() && hs.Cfg.SAMLEnabled
+	viewData.Settings["samlEnabled"] = hs.samlEnabled()
 
 	if loginError, ok := tryGetEncryptedCookie(c, loginErrorCookieName); ok {
 		// this cookie is only set whenever an OAuth login fails
@@ -147,12 +148,12 @@ func (hs *HTTPServer) tryOAuthAutoLogin(c *models.ReqContext) bool {
 	if !setting.OAuthAutoLogin {
 		return false
 	}
-	oauthInfos := setting.OAuthService.OAuthInfos
+	oauthInfos := hs.SocialService.GetOAuthInfoProviders()
 	if len(oauthInfos) != 1 {
 		log.Warnf("Skipping OAuth auto login because multiple OAuth providers are configured")
 		return false
 	}
-	for key := range setting.OAuthService.OAuthInfos {
+	for key := range oauthInfos {
 		redirectUrl := hs.Cfg.AppSubURL + "/login/" + key
 		log.Infof("OAuth auto login enabled. Redirecting to " + redirectUrl)
 		c.Redirect(redirectUrl, 307)
@@ -278,7 +279,7 @@ func (hs *HTTPServer) loginUserWithUser(user *models.User, c *models.ReqContext)
 }
 
 func (hs *HTTPServer) Logout(c *models.ReqContext) {
-	if hs.Cfg.SAMLEnabled && hs.Cfg.SAMLSingleLogoutEnabled && hs.License.HasValidLicense() {
+	if hs.samlSingleLogoutEnabled() {
 		c.Redirect(hs.Cfg.AppSubURL + "/logout/saml")
 		return
 	}
@@ -340,6 +341,14 @@ func (hs *HTTPServer) RedirectResponseWithError(ctx *models.ReqContext, err erro
 	}
 
 	return response.Redirect(hs.Cfg.AppSubURL + "/login")
+}
+
+func (hs *HTTPServer) samlEnabled() bool {
+	return hs.SettingsProvider.KeyValue("auth.saml", "enabled").MustBool(false) && hs.License.HasValidLicense()
+}
+
+func (hs *HTTPServer) samlSingleLogoutEnabled() bool {
+	return hs.SettingsProvider.KeyValue("auth.saml", "single_logout").MustBool(false) && hs.samlEnabled()
 }
 
 func getLoginExternalError(err error) string {

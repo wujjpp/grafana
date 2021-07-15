@@ -51,11 +51,16 @@ export async function fetchRulerRulesGroup(
 }
 
 export async function deleteRulerRulesGroup(dataSourceName: string, namespace: string, groupName: string) {
-  return getBackendSrv().delete(
-    `/api/ruler/${getDatasourceAPIId(dataSourceName)}/api/v1/rules/${encodeURIComponent(
-      namespace
-    )}/${encodeURIComponent(groupName)}`
-  );
+  return getBackendSrv()
+    .fetch({
+      url: `/api/ruler/${getDatasourceAPIId(dataSourceName)}/api/v1/rules/${encodeURIComponent(
+        namespace
+      )}/${encodeURIComponent(groupName)}`,
+      method: 'DELETE',
+      showSuccessAlert: false,
+      showErrorAlert: false,
+    })
+    .toPromise();
 }
 
 // false in case ruler is not supported. this is weird, but we'll work on it
@@ -70,9 +75,15 @@ async function rulerGetRequest<T>(url: string, empty: T): Promise<T> {
       .toPromise();
     return response.data;
   } catch (e) {
-    if (e?.status === 404 || e?.data?.message?.includes('group does not exist')) {
-      return empty;
-    } else if (e?.status === 500 && e?.data?.message?.includes('mapping values are not allowed in this context')) {
+    if (e?.status === 404) {
+      if (e?.data?.message?.includes('group does not exist') || e?.data?.message?.includes('no rule groups found')) {
+        return empty;
+      }
+      throw new Error('404 from rules config endpoint. Perhaps ruler API is not enabled?');
+    } else if (
+      e?.status === 500 &&
+      e?.data?.message?.includes('unexpected content type from upstream. expected YAML, got text/html')
+    ) {
       throw {
         ...e,
         data: {

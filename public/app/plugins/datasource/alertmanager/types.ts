@@ -5,13 +5,6 @@ export type AlertManagerCortexConfig = {
   alertmanager_config: AlertmanagerConfig;
 };
 
-// NOTE - This type is incomplete! But currently, we don't need more.
-export type AlertmanagerStatusPayload = {
-  config: {
-    original: string;
-  };
-};
-
 export type TLSConfig = {
   ca_file: string;
   cert_file: string;
@@ -68,14 +61,13 @@ export type WebhookConfig = {
 };
 
 export type GrafanaManagedReceiverConfig = {
-  id?: number;
-  frequency: number;
+  uid?: string;
   disableResolveMessage: boolean;
-  secureFields: Record<string, unknown>;
+  secureFields?: Record<string, boolean>;
+  secureSettings?: Record<string, unknown>;
   settings: Record<string, unknown>;
-  sendReminder: boolean;
   type: string;
-  uid: string;
+  name: string;
   updated?: string;
   created?: string;
 };
@@ -92,17 +84,19 @@ export type Receiver = {
   victorops_configs?: unknown[];
   wechat_configs?: unknown[];
   grafana_managed_receiver_configs?: GrafanaManagedReceiverConfig[];
+  [key: string]: unknown;
 };
 
 export type Route = {
   receiver?: string;
   group_by?: string[];
   continue?: boolean;
+  matchers?: string[];
   match?: Record<string, string>;
   match_re?: Record<string, string>;
   group_wait?: string;
   group_interval?: string;
-  repeat_itnerval?: string;
+  repeat_interval?: string;
   routes?: Route[];
 };
 
@@ -142,10 +136,11 @@ export type AlertmanagerConfig = {
   receivers?: Receiver[];
 };
 
-export type SilenceMatcher = {
+export type Matcher = {
   name: string;
   value: string;
   isRegex: boolean;
+  isEqual: boolean;
 };
 
 export enum SilenceState {
@@ -160,9 +155,16 @@ export enum AlertState {
   Suppressed = 'suppressed',
 }
 
+export enum MatcherOperator {
+  equal = '=',
+  notEqual = '!=',
+  regex = '=~',
+  notRegex = '!~',
+}
+
 export type Silence = {
   id: string;
-  matchers?: SilenceMatcher[];
+  matchers?: Matcher[];
   startsAt: string;
   endsAt: string;
   updatedAt: string;
@@ -175,7 +177,7 @@ export type Silence = {
 
 export type SilenceCreatePayload = {
   id?: string;
-  matchers?: SilenceMatcher[];
+  matchers?: Matcher[];
   startsAt: string;
   endsAt: string;
   createdBy: string;
@@ -206,5 +208,21 @@ export type AlertmanagerGroup = {
   labels: { [key: string]: string };
   receiver: { name: string };
   alerts: AlertmanagerAlert[];
-  id: string;
 };
+
+export interface AlertmanagerStatus {
+  cluster: {
+    peers: unknown;
+    status: string;
+  };
+  config: AlertmanagerConfig;
+  uptime: string;
+  versionInfo: {
+    branch: string;
+    buildDate: string;
+    buildUser: string;
+    goVersion: string;
+    revision: string;
+    version: string;
+  };
+}

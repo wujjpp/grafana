@@ -6,13 +6,16 @@ import {
   AxisPlacement,
   DrawStyle,
   PointVisibility,
-  ScaleDistribution,
   ScaleOrientation,
   ScaleDirection,
+  GraphTresholdsStyleMode,
 } from '../config';
-import darkTheme from '../../../themes/dark';
+import { createTheme, ThresholdsMode } from '@grafana/data';
+import { ScaleDistribution } from '../models.gen';
 
 describe('UPlotConfigBuilder', () => {
+  const darkTheme = createTheme();
+
   describe('default config', () => {
     it('builds default config', () => {
       const builder = new UPlotConfigBuilder();
@@ -279,6 +282,33 @@ describe('UPlotConfigBuilder', () => {
     });
   });
 
+  it('disables autoscaling when both (and only) hardMin and hardMax are specified', () => {
+    const builder = new UPlotConfigBuilder();
+
+    builder.addScale({
+      isTime: false,
+      scaleKey: 'scale-y',
+      orientation: ScaleOrientation.Vertical,
+      direction: ScaleDirection.Up,
+      min: -100,
+      max: 100,
+    });
+
+    expect(builder.getConfig().scales!['scale-y']!.auto).toEqual(false);
+
+    builder.addScale({
+      isTime: false,
+      scaleKey: 'scale-y2',
+      orientation: ScaleOrientation.Vertical,
+      direction: ScaleDirection.Up,
+      min: -100,
+      max: 100,
+      softMin: -50,
+    });
+
+    expect(builder.getConfig().scales!['scale-y2']!.auto).toEqual(true);
+  });
+
   it('allows axes configuration', () => {
     const builder = new UPlotConfigBuilder();
 
@@ -308,16 +338,18 @@ describe('UPlotConfigBuilder', () => {
             },
             "label": "test label",
             "labelFont": "12px \\"Roboto\\", \\"Helvetica\\", \\"Arial\\", sans-serif",
-            "labelSize": 18,
+            "labelGap": 8,
+            "labelSize": 20,
             "scale": "scale-x",
             "show": true,
             "side": 2,
             "size": [Function],
             "space": [Function],
             "splits": undefined,
-            "stroke": "rgb(201, 209, 217)",
+            "stroke": "rgb(204, 204, 220)",
             "ticks": Object {
               "show": true,
+              "size": 4,
               "stroke": "rgba(240, 250, 255, 0.09)",
               "width": 1,
             },
@@ -375,7 +407,6 @@ describe('UPlotConfigBuilder', () => {
     builder.addSeries({
       drawStyle: DrawStyle.Line,
       scaleKey: 'scale-x',
-      fieldName: 'A-series',
       lineColor: '#0000ff',
       theme: darkTheme,
     });
@@ -388,7 +419,6 @@ describe('UPlotConfigBuilder', () => {
     builder.addSeries({
       drawStyle: DrawStyle.Line,
       scaleKey: 'scale-x',
-      fieldName: 'A-series',
       lineColor: '#FFAABB',
       fillOpacity: 50,
       theme: darkTheme,
@@ -402,7 +432,6 @@ describe('UPlotConfigBuilder', () => {
     builder.addSeries({
       drawStyle: DrawStyle.Line,
       scaleKey: 'scale-x',
-      fieldName: 'A-series',
       lineColor: '#FFAABB',
       fillOpacity: 50,
       fillColor: '#FF0000',
@@ -417,7 +446,6 @@ describe('UPlotConfigBuilder', () => {
     builder.addSeries({
       drawStyle: DrawStyle.Line,
       scaleKey: 'scale-x',
-      fieldName: 'A-series',
       lineColor: '#FFAABB',
       fillOpacity: 50,
       gradientMode: GraphGradientMode.Opacity,
@@ -432,12 +460,10 @@ describe('UPlotConfigBuilder', () => {
     builder.addSeries({
       drawStyle: DrawStyle.Line,
       scaleKey: 'scale-x',
-      fieldName: 'A-series',
       fillOpacity: 50,
       gradientMode: GraphGradientMode.Opacity,
       showPoints: PointVisibility.Auto,
       pointSize: 5,
-      pointColor: '#00ff00',
       lineColor: '#0000ff',
       lineWidth: 1,
       spanNulls: false,
@@ -470,9 +496,10 @@ describe('UPlotConfigBuilder', () => {
             "fill": [Function],
             "paths": [Function],
             "points": Object {
-              "fill": "#00ff00",
+              "fill": "#0000ff",
+              "filter": undefined,
               "size": 5,
-              "stroke": "#00ff00",
+              "stroke": "#0000ff",
             },
             "pxAlign": undefined,
             "scale": "scale-x",
@@ -494,7 +521,6 @@ describe('UPlotConfigBuilder', () => {
       builder.addSeries({
         drawStyle: DrawStyle.Line,
         scaleKey: 'scale-x',
-        fieldName: 'A-series',
         fillOpacity: 50,
         gradientMode: GraphGradientMode.Opacity,
         showPoints: PointVisibility.Auto,
@@ -506,7 +532,6 @@ describe('UPlotConfigBuilder', () => {
       builder.addSeries({
         drawStyle: DrawStyle.Line,
         scaleKey: 'scale-x',
-        fieldName: 'B-series',
         fillOpacity: 50,
         gradientMode: GraphGradientMode.Opacity,
         showPoints: PointVisibility.Auto,
@@ -520,7 +545,6 @@ describe('UPlotConfigBuilder', () => {
       builder.addSeries({
         drawStyle: DrawStyle.Line,
         scaleKey: 'scale-x',
-        fieldName: 'C-series',
         fillOpacity: 50,
         gradientMode: GraphGradientMode.Opacity,
         showPoints: PointVisibility.Auto,
@@ -582,9 +606,10 @@ describe('UPlotConfigBuilder', () => {
               "fill": [Function],
               "paths": [Function],
               "points": Object {
-                "fill": undefined,
+                "fill": "#0000ff",
+                "filter": undefined,
                 "size": undefined,
-                "stroke": undefined,
+                "stroke": "#0000ff",
               },
               "pxAlign": undefined,
               "scale": "scale-x",
@@ -597,9 +622,10 @@ describe('UPlotConfigBuilder', () => {
               "fill": [Function],
               "paths": [Function],
               "points": Object {
-                "fill": undefined,
+                "fill": "#00ff00",
+                "filter": undefined,
                 "size": 5,
-                "stroke": undefined,
+                "stroke": "#00ff00",
               },
               "pxAlign": undefined,
               "scale": "scale-x",
@@ -612,9 +638,10 @@ describe('UPlotConfigBuilder', () => {
               "fill": [Function],
               "paths": [Function],
               "points": Object {
-                "fill": undefined,
+                "fill": "#ff0000",
+                "filter": undefined,
                 "size": 5,
-                "stroke": undefined,
+                "stroke": "#ff0000",
               },
               "pxAlign": undefined,
               "scale": "scale-x",
@@ -627,6 +654,39 @@ describe('UPlotConfigBuilder', () => {
           "tzDate": [Function],
         }
       `);
+    });
+  });
+
+  describe('Thresholds', () => {
+    it('Only adds one threshold per scale', () => {
+      const builder = new UPlotConfigBuilder();
+      const addHookFn = jest.fn();
+      builder.addHook = addHookFn;
+
+      builder.addThresholds({
+        scaleKey: 'A',
+        thresholds: {
+          mode: ThresholdsMode.Absolute,
+          steps: [],
+        },
+        config: {
+          mode: GraphTresholdsStyleMode.Area,
+        },
+        theme: darkTheme,
+      });
+      builder.addThresholds({
+        scaleKey: 'A',
+        thresholds: {
+          mode: ThresholdsMode.Absolute,
+          steps: [],
+        },
+        config: {
+          mode: GraphTresholdsStyleMode.Area,
+        },
+        theme: darkTheme,
+      });
+
+      expect(addHookFn).toHaveBeenCalledTimes(1);
     });
   });
 });
