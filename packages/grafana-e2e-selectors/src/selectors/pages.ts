@@ -1,5 +1,10 @@
 import { Components } from './components';
 
+/**
+ * Selectors grouped/defined in Pages
+ *
+ * @alpha
+ */
 export const Pages = {
   Login: {
     url: '/login',
@@ -133,7 +138,7 @@ export const Pages = {
   Explore: {
     url: '/explore',
     General: {
-      container: 'Explore',
+      container: 'data-testid Explore',
       graph: 'Explore Graph',
       table: 'Explore Table',
       scrollBar: () => '.scrollbar-view',
