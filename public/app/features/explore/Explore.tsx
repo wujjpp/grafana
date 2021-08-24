@@ -14,7 +14,15 @@ import {
   Collapse,
   TooltipDisplayMode,
 } from '@grafana/ui';
-import { AbsoluteTimeRange, DataQuery, GrafanaTheme, LoadingState, RawTimeRange, DataFrame } from '@grafana/data';
+import {
+  AbsoluteTimeRange,
+  DataQuery,
+  GrafanaTheme,
+  LoadingState,
+  RawTimeRange,
+  DataFrame,
+  PreferredVisualisationType,
+} from '@grafana/data';
 
 import LogsContainer from './LogsContainer';
 import QueryRows from './QueryRows';
@@ -36,6 +44,7 @@ import { ExploreGraphNGPanel } from './ExploreGraphNGPanel';
 import { NodeGraphContainer } from './NodeGraphContainer';
 import { ResponseErrorContainer } from './ResponseErrorContainer';
 import { TraceViewContainer } from './TraceView/TraceViewContainer';
+import LogsView from './LogsView';
 
 const getStyles = stylesFactory((theme: GrafanaTheme) => {
   return {
@@ -62,6 +71,7 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
 export interface ExploreProps {
   exploreId: ExploreId;
   theme: GrafanaTheme;
+  showLogsView: boolean;
 }
 
 enum ExploreDrawer {
@@ -268,6 +278,27 @@ export class Explore extends React.PureComponent<Props, ExploreState> {
     );
   }
 
+  renderLogsViewPanel(width: number) {
+    const { queryResponse, exploreId, absoluteRange, datasourceInstance } = this.props;
+    const dataFrames = queryResponse.series.filter(
+      (series) => series.meta?.preferredVisualisationType === ('qcc-logs' as PreferredVisualisationType)
+    );
+
+    return (
+      // If there is no data (like 404) we show a separate error so no need to show anything here
+      dataFrames.length && (
+        <LogsView
+          exploreId={exploreId}
+          dataSourceId={datasourceInstance?.id || -1}
+          width={width}
+          dataFrame={dataFrames[0]}
+          absoluteRange={absoluteRange}
+          updateTimeRange={this.onUpdateTimeRange}
+        />
+      )
+    );
+  }
+
   render() {
     const {
       datasourceInstance,
@@ -283,6 +314,7 @@ export class Explore extends React.PureComponent<Props, ExploreState> {
       showLogs,
       showTrace,
       showNodeGraph,
+      showLogsView,
     } = this.props;
     const { openDrawer } = this.state;
     const styles = getStyles(theme);
@@ -302,7 +334,7 @@ export class Explore extends React.PureComponent<Props, ExploreState> {
                 addQueryRowButtonDisabled={isLive}
                 // We cannot show multiple traces at the same time right now so we do not show add query button.
                 //TODO:unification
-                addQueryRowButtonHidden={false}
+                addQueryRowButtonHidden={showLogsView}
                 richHistoryButtonActive={showRichHistory}
                 queryInspectorButtonActive={showQueryInspector}
                 onClickAddQueryRowButton={this.onClickAddQueryRowButton}
@@ -322,6 +354,7 @@ export class Explore extends React.PureComponent<Props, ExploreState> {
                     <ErrorBoundaryAlert>
                       {showPanels && (
                         <>
+                          {showLogsView && this.renderLogsViewPanel(width)}
                           {showMetrics && graphResult && (
                             <ErrorBoundaryAlert>{this.renderGraphPanel(width)}</ErrorBoundaryAlert>
                           )}
@@ -376,6 +409,7 @@ function mapStateToProps(state: StoreState, { exploreId }: ExploreProps) {
     absoluteRange,
     queryResponse,
     showNodeGraph,
+    showLogsView,
     loading,
   } = item;
 
@@ -395,6 +429,7 @@ function mapStateToProps(state: StoreState, { exploreId }: ExploreProps) {
     showTable,
     showTrace,
     showNodeGraph,
+    showLogsView,
     loading,
   };
 }

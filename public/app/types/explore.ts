@@ -156,6 +156,7 @@ export interface ExploreItemState {
    * We are currently caching last 5 query responses.
    */
   cache: Array<{ key: string; value: PanelData }>;
+  showLogsView?: boolean; // 新增内容
 }
 
 export interface ExploreUpdateState {
