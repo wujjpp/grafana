@@ -591,7 +591,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
                         </td>
                         <td className={this.styles.timeCell}>
                           <Icon name={this.getIconName(i)}></Icon>
-                          {dateTimeParse(+v['time']).format('YYYY-MM-DD HH:mm:ss.SSS')}
+                          {dateTimeParse(+v['time'] || +v['__time__'] * 1000).format('YYYY-MM-DD HH:mm:ss.SSS')}
 
                           {/* 播放按钮 */}
                           {this.canPlay(v) && (
