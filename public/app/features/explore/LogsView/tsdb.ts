@@ -103,7 +103,7 @@ class TSDB {
       query = query.substring(0, queryText.indexOf('|'));
     }
 
-    query = `${query} | select "${fieldName}" as label, count(1) as count group by label limit 10000`;
+    query = `${query} | select "${fieldName}" as label, count(1) as count group by label order by count desc limit 10000`;
 
     const requestData: any = {
       Queries: [
