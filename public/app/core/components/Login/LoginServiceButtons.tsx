@@ -129,15 +129,25 @@ export const LoginServiceButtons = () => {
   const serviceElements = serviceElementsEnabled.map((key) => {
     const service: LoginService = loginServices()[key];
     return (
-      <a
-        key={key}
-        className={cx(`btn btn-medium btn-service btn-service--${service.className || key}`, styles.button)}
-        href={`login/${service.hrefName ? service.hrefName : key}`}
-        target="_self"
-      >
-        <i className={`btn-service-icon fa fa-${service.icon ? service.icon : key}`} />
-        Sign in with {service.name}
-      </a>
+      <>
+        <a
+          key={key}
+          className={cx(`btn btn-medium btn-service btn-service--${service.className || key}`, styles.button)}
+          href={`login/${service.hrefName ? service.hrefName : key}`}
+          target="_self"
+        >
+          <i className={`btn-service-icon fa fa-${service.icon ? service.icon : key}`} />
+          Sign in with {service.name}
+        </a>
+        {service.name === 'GitLab' ? (
+          <span>
+            提示：请点击 [ Sign in with GitLab ]
+            按钮进行登录，系统会将您引导到公司内部GitLab系统，在GitLab登录界面使用您的LDAP账号进行Grafana登录授权
+          </span>
+        ) : (
+          <></>
+        )}
+      </>
     );
   });
 
