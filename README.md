@@ -5,7 +5,12 @@
 ## 环境安装
 
 1. 安装nodejs
-2. [安装go](https://go.dev/doc/install)
+2. [安装go](https://go.dev/doc/install)， 建议下载zip包安装
+   设置环境变量`GOROOT`和`GOPATH`路径，例如：  
+   GOPATH=d:\go
+   GOROOT=d:\devtools\go
+   备注： `GOROOT`指GO安装目录，`GOPATH`指GO模块下载保存路径
+   将`%GOPATH%\bin`和`%GOROOT%\bin` 添加到环境变量`PATH`中
 3. [安装mage](https://github.com/magefile/mage)
   
 ## 获取代码
