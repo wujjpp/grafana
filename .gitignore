@@ -52,7 +52,6 @@ public/css/*.min.css
 .eslintcache
 
 /data/*
-/bin/*
 
 # devenv
 /devenv/docker-compose.yaml
