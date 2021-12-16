@@ -112,7 +112,7 @@ cd bin
 grafana-server.exe
 ```
 
-### 8.0 其他
+### 8. 其他
 
 log-backend-datasource配置关于SLS的配置，内部沟通
 
