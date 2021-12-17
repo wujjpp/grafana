@@ -1,10 +1,13 @@
 # Grafana开发说明
 
-Requirements:
+Prerequisites
 
-- Typescript
-- React
-- Go
+>- Knowledge about how data sources are implemented in the frontend.
+>- Grafana 7.0
+>- Go 1.14+
+>- Mage
+>- NodeJS
+>- yarn
 
 ## 环境安装
 
