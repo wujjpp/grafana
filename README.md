@@ -1,6 +1,6 @@
 # Grafana开发说明
 
-## Requirements
+Requirements:
 
 - Typescript
 - React
