@@ -1,6 +1,10 @@
 # Grafana开发说明
 
-![Grafana](docs/logo-horizontal.png)
+## Requirements
+
+- Typescript
+- React
+- Go
 
 ## 环境安装
 
