@@ -120,6 +120,10 @@ grafana-server.exe
 
 ### 8. 其他
 
-log-backend-datasource配置关于SLS的配置，内部沟通
+1. log-backend-datasource配置关于SLS的配置，内部沟通
+
+2. [Grafana内置组件文档](https://developers.grafana.com/ui/latest/index.html)
+
+3. [Panel Plugin开发教程](https://grafana.com/tutorials/build-a-panel-plugin/#create-a-new-plugin)
 
 Made with ♥ by Wu Jian Ping
