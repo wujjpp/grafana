@@ -4,7 +4,7 @@
 
 import React from 'react';
 import _ from 'lodash';
-import { stylesFactory } from '@grafana/ui';
+import { stylesFactory, CustomScrollbar } from '@grafana/ui';
 import { css } from 'emotion';
 import { AbsoluteTimeRange } from '@grafana/data';
 import utils from '../utils';
@@ -110,33 +110,35 @@ const DistributionView = (props: Props): JSX.Element => {
         className={styles.header}
       >{`${notNullCount} of ${totalRecords} rows have that field(display limit 10000 items)`}</div>
       <div className={styles.body}>
-        {_.map(list, (o) => (
-          <div className={styles.statsRow} key={`${o.label}-${o.count}`}>
-            <div className={styles.statsRowLabel}>
-              <div className={styles.statsRowLabelValue}>{o.label}</div>
-              <div className={styles.statsRowLabelCount}>{o.count}</div>
-              <div className={styles.statsRowLabelPercent}>{o.percent.toFixed(0)}%</div>
+        <CustomScrollbar autoHeightMax={'800px'}>
+          {_.map(list, (o) => (
+            <div className={styles.statsRow} key={`${o.label}-${o.count}`}>
+              <div className={styles.statsRowLabel}>
+                <div className={styles.statsRowLabelValue}>{o.label}</div>
+                <div className={styles.statsRowLabelCount}>{o.count}</div>
+                <div className={styles.statsRowLabelPercent}>{o.percent.toFixed(0)}%</div>
+              </div>
+              <div className={styles.statsRowBar}>
+                <div className={styles.statsRowBarInner} style={{ width: o.percent + '%' }}></div>
+              </div>
+              {_.includes(utils.SHOULD_ADD_LINK_TO_EXPLORE, fieldName) && (
+                <div
+                  className={styles.exploreLinkContainer}
+                  dangerouslySetInnerHTML={{
+                    __html: utils.getFieldToExploreLink(
+                      fieldName,
+                      o.label,
+                      dataSourceInstanceName,
+                      absoluteTimeRange.from,
+                      absoluteTimeRange.to,
+                      o.label === 'null'
+                    ),
+                  }}
+                ></div>
+              )}
             </div>
-            <div className={styles.statsRowBar}>
-              <div className={styles.statsRowBarInner} style={{ width: o.percent + '%' }}></div>
-            </div>
-            {_.includes(utils.SHOULD_ADD_LINK_TO_EXPLORE, fieldName) && (
-              <div
-                className={styles.exploreLinkContainer}
-                dangerouslySetInnerHTML={{
-                  __html: utils.getFieldToExploreLink(
-                    fieldName,
-                    o.label,
-                    dataSourceInstanceName,
-                    absoluteTimeRange.from,
-                    absoluteTimeRange.to,
-                    o.label === 'null'
-                  ),
-                }}
-              ></div>
-            )}
-          </div>
-        ))}
+          ))}
+        </CustomScrollbar>
       </div>
     </div>
   );
