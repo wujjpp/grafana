@@ -333,12 +333,12 @@ export default class TableView extends React.Component<Props, State> {
                   ) : this.state[key].distribution.errorMessage !== '' ? (
                     <div className={styles.statusError}>{this.state[key].distribution.errorMessage}</div>
                   ) : (
-                    DistributionView({
-                      items: this.state[key].distribution.items,
-                      fieldName: key,
-                      dataSourceInstanceName: dataSourceInstanceName,
-                      absoluteTimeRange: absoluteTimeRange,
-                    })
+                    <DistributionView
+                      items={this.state[key].distribution.items}
+                      fieldName={key}
+                      dataSourceInstanceName={dataSourceInstanceName}
+                      absoluteTimeRange={absoluteTimeRange}
+                    ></DistributionView>
                   )}
                 </td>
               ) : (

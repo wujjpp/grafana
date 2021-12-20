@@ -4,10 +4,12 @@
 
 import React from 'react';
 import _ from 'lodash';
-import { stylesFactory, CustomScrollbar } from '@grafana/ui';
+import { stylesFactory, Pagination } from '@grafana/ui';
 import { css } from 'emotion';
 import { AbsoluteTimeRange } from '@grafana/data';
 import utils from '../utils';
+
+const PAGE_SIZE = 20;
 
 const styles = stylesFactory(() => {
   return {
@@ -81,37 +83,75 @@ interface Props {
   absoluteTimeRange: AbsoluteTimeRange;
 }
 
-const DistributionView = (props: Props): JSX.Element => {
-  let { items, fieldName, dataSourceInstanceName, absoluteTimeRange } = props;
+interface State {
+  currentPage: number;
+  currentList: Array<{ label: string; count: number; percent: number }>;
+  list: Array<{ label: string; count: number; percent: number }>;
+  totalRecords: number;
+  notNullCount: number;
+}
 
-  let totalRecords = _.reduce(items, (total, o) => (total += o.count), 0);
-  let notNullCount = totalRecords;
-  let nullCount = 0;
-  let nullItem = _.find(items, (o) => o.label === 'null');
-  if (nullItem) {
-    nullCount = +nullItem.count || 0;
-    notNullCount = totalRecords - nullCount;
+class DistributionView extends React.Component<Props, State> {
+  state: State = {
+    list: [],
+    currentPage: 1,
+    currentList: [],
+    totalRecords: 0,
+    notNullCount: 0,
+  };
+
+  componentDidMount() {
+    const { items } = this.props;
+    if (items) {
+      let totalRecords = _.reduce(items, (total, o) => (total += o.count), 0);
+      let notNullCount = totalRecords;
+      let nullCount = 0;
+      let nullItem = _.find(items, (o) => o.label === 'null');
+      if (nullItem) {
+        nullCount = +nullItem.count || 0;
+        notNullCount = totalRecords - nullCount;
+      }
+
+      const list = _.chain(items)
+        .map((o) => {
+          return {
+            label: o.label,
+            count: o.count,
+            percent: (o.count * 100) / (totalRecords * 1.0),
+          };
+        })
+        .orderBy(['count'], ['desc'])
+        .value();
+      const currentList = list.slice(0, PAGE_SIZE);
+
+      this.setState({
+        list,
+        currentList,
+        totalRecords,
+        notNullCount,
+      });
+    }
   }
 
-  let list: any[] = _.chain(items)
-    .map((o) => {
-      return {
-        label: o.label,
-        count: o.count,
-        percent: (o.count * 100) / (totalRecords * 1.0),
-      };
-    })
-    .orderBy(['count'], ['desc'])
-    .value();
+  changeCurrentPage = (num: number) => {
+    const { list } = this.state;
+    const currentList = list.slice((num - 1) * PAGE_SIZE, num * PAGE_SIZE);
 
-  return (
-    <div className={styles.container}>
-      <div
-        className={styles.header}
-      >{`${notNullCount} of ${totalRecords} rows have that field(display limit 10000 items)`}</div>
-      <div className={styles.body}>
-        <CustomScrollbar autoHeightMax={'800px'}>
-          {_.map(list, (o) => (
+    this.setState({ currentList, currentPage: num });
+  };
+
+  render() {
+    const { fieldName, dataSourceInstanceName, absoluteTimeRange } = this.props;
+    const { list, currentPage, currentList, totalRecords, notNullCount } = this.state;
+    const totalPage = Math.ceil(list.length / PAGE_SIZE);
+
+    return (
+      <div className={styles.container}>
+        <div
+          className={styles.header}
+        >{`${notNullCount} of ${totalRecords} rows have that field(display limit 10000 items)`}</div>
+        <div className={styles.body}>
+          {_.map(currentList, (o) => (
             <div className={styles.statsRow} key={`${o.label}-${o.count}`}>
               <div className={styles.statsRowLabel}>
                 <div className={styles.statsRowLabelValue}>{o.label}</div>
@@ -138,12 +178,17 @@ const DistributionView = (props: Props): JSX.Element => {
               )}
             </div>
           ))}
-        </CustomScrollbar>
+          {totalPage > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              numberOfPages={totalPage}
+              onNavigate={this.changeCurrentPage}
+            ></Pagination>
+          )}
+        </div>
       </div>
-    </div>
-  );
-};
-
-DistributionView.displayName = 'DistributionView';
+    );
+  }
+}
 
 export default DistributionView;
