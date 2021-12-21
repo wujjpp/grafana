@@ -4,7 +4,18 @@
 
 import React from 'react';
 import _ from 'lodash';
-import { stylesFactory, Drawer, Button, TabsBar, Tab, TabContent, Field, CustomScrollbar, Alert } from '@grafana/ui';
+import {
+  stylesFactory,
+  Drawer,
+  Button,
+  TabsBar,
+  Tab,
+  TabContent,
+  Field,
+  CustomScrollbar,
+  Alert,
+  Card,
+} from '@grafana/ui';
 import { css } from 'emotion';
 import JsonView from './JsonView';
 import axios from 'axios';
@@ -181,6 +192,10 @@ export default class DiagnosticsView extends React.Component<Props, State> {
                 <TabContent>
                   {this.state.tabs[0].active && (
                     <div className={this.styles.formContainer}>
+                      <Card
+                        heading="提示"
+                        description="92版之后的Chrome打开 chrome://flags/ 查找 Block insecure private network requests 设置成Disabled"
+                      />
                       <div className={this.styles.fieldContainer}>
                         <span>Url</span>&nbsp;:&nbsp;&nbsp;
                         <span className={this.styles.colorNormal}>{DEFAULT_HOST + path}</span>
