@@ -240,11 +240,32 @@ class TSDB {
     return this.getEmptyDataFrame();
   }
 
+  // 生成空DataFrame
   getEmptyDataFrame(): MutableDataFrame {
     return new MutableDataFrame({
       refId: 'A',
       fields: [],
     });
+  }
+
+  // 根据requestId获取请求链信息
+  async getRequestGraphByRequestId(dataSourceId: number, from: number, to: number, requestId: string): Promise<any> {
+    const requestData: any = {
+      Queries: [
+        {
+          queryType: 'query',
+          target: 'query',
+          refId: 'A',
+          datasourceId: dataSourceId,
+          queryText: `* and category:http and fields.requestContext.requestId:${requestId}`,
+          hide: false,
+        },
+      ],
+    };
+    requestData.From = moment(from).valueOf().toString();
+    requestData.To = moment(to).valueOf().toString();
+    const results = await this.query(requestData);
+    return Promise.resolve(results);
   }
 }
 

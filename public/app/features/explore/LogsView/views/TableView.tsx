@@ -244,6 +244,7 @@ export default class TableView extends React.Component<Props, State> {
       onToggleFilter,
       valueFilters,
       dataSourceInstanceName,
+      dataSourcedId,
       absoluteTimeRange,
     } = this.props;
 
@@ -350,6 +351,7 @@ export default class TableView extends React.Component<Props, State> {
                   isInJsonMode={this.state[key] && this.state[key].isInJsonMode}
                   isInSqlMode={this.state[key] && this.state[key].isInSqlMode}
                   dataSourceInstanceName={dataSourceInstanceName}
+                  dataSourceId={dataSourcedId}
                   absoluteTimeRange={absoluteTimeRange}
                 ></FieldView>
               )}
