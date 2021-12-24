@@ -12,8 +12,12 @@ import SqlView from './SqlView';
 import utils from '../utils';
 import copy from 'copy-to-clipboard';
 import tsdb from '../tsdb';
+import '../../libs/lite.render';
+import { v4 as uuid } from 'uuid';
 
 const moment = require('moment');
+
+const dot = require('../../libs/dot').default;
 
 require('./global.css');
 
@@ -142,6 +146,7 @@ interface State {
   graphViewOpened: boolean;
   isLoadingGraph: boolean;
   grahpData: any[];
+  svg: any;
 }
 
 // 获取栏位样式
@@ -182,16 +187,23 @@ const getFieldClassName = (key: string, value: any): string => {
   return className;
 };
 
+const getNodeNamesFromEdgeId = (edgeId?: string): string[] | undefined => {
+  const tmp = edgeId?.split(':')[0];
+  const nodes = tmp?.split('->');
+  return nodes;
+};
 export default class FieldView extends React.PureComponent<Props, State> {
   state: State = {
     expanded: false,
     graphViewOpened: false,
     isLoadingGraph: false,
     grahpData: [],
+    svg: null,
   };
 
   container: HTMLElement | null;
   toggleBtn: HTMLElement | null;
+  graphViewContainer: HTMLElement | null;
 
   getFileldLink(fieldName: string, fieldValue: string): string {
     const { dataSourceInstanceName, absoluteTimeRange } = this.props;
@@ -252,18 +264,77 @@ export default class FieldView extends React.PureComponent<Props, State> {
       .getRequestGraphByRequestId(dataSourceId, from, to, requestId)
       .then((data) => {
         const grahpData: any[] = [];
+        const nodeColor = '#5B8FF9';
+        const nodeFontColor = '#5B8FF9';
+        const edgeColor = '#c7d0d9';
+        const edgeFontColor = '#5B8FF9';
 
         // 这里处理数据
         _.forEach(data, (o) => {
           grahpData.push(o);
         });
 
+        let nodes: any[] = [];
+        let edges: any[] = [];
+        let newData = data[0] || [];
+
+        _.forEach(newData, (x) => {
+          let fields = JSON.parse(x.fields);
+          edges.push({
+            id: uuid(),
+            source: fields.requestContext.requestFromAppName,
+            target: x.appName,
+            label: `${x.timeString}, ${fields.http.httpStatus || ''}`,
+          });
+          nodes.push({
+            name: x.appName,
+          });
+          if (fields.requestContext.requestFromAppName) {
+            nodes.push({
+              name: fields.requestContext.requestFromAppName,
+            });
+          }
+        });
+
+        const nodeStrings = _.reduce(
+          nodes,
+          (sum, o) => {
+            return `${sum}"${o.name}" [id="${o.name}"; color="${o.color || nodeColor}";fontcolor="${
+              o.fontColor || nodeFontColor
+            }"];`;
+          },
+          ''
+        );
+        const edgeStrings = _.reduce(
+          edges,
+          (sum, o) => {
+            return o.source
+              ? `${sum}"${o.source}" -> "${o.target}" [id="${o.source}->${o.target}:${o.id}"; label="${
+                  o.label
+                }"; color="${o.color || edgeColor}";fontcolor="${o.fontColor || edgeFontColor}"];`
+              : `${sum}`;
+          },
+          ''
+        );
+        const dotString = `digraph {
+          bgcolor="transparent";
+          fontsize=20;
+          rankdir="LR";
+          node [fontname="Verdana"; size="1,1"; fontsize=12; color="${nodeColor}"; fontcolor="${nodeFontColor}"];
+          edge [arrowhead=vee; fontname="Verdana"; fontsize=12; fontcolor="${edgeFontColor}"; color="${edgeColor}"];
+          ${nodeStrings}
+          ${edgeStrings}
+        }`;
+        const svg = dot`${dotString}`;
+        const $svg = $(svg);
+        console.log(svg);
         // 应该直接画图
-        this.setState({ ...this.state, grahpData });
+        this.setState({ ...this.state, grahpData, svg: $svg[0] ? $svg[0].outerHTML : '' });
       })
       .catch(() => {})
       .finally(() => {
         this.setState({ ...this.state, isLoadingGraph: false });
+        console.log(this.state.grahpData);
       });
   }
 
@@ -302,6 +373,28 @@ export default class FieldView extends React.PureComponent<Props, State> {
           }
         }
       }
+    }
+
+    if (this.graphViewContainer) {
+      $('.edge > text')
+        .on('mouseover', (e) => {
+          $(e.target).parent().addClass('active');
+          const edgeId = $(e.target).parent().attr('id');
+          const nodes = getNodeNamesFromEdgeId(edgeId);
+          if (nodes && nodes.length === 2) {
+            $(`#${nodes[0]}`).addClass('active');
+            $(`#${nodes[1]}`).addClass('active');
+          }
+        })
+        .on('mouseout', (e) => {
+          $(e.target).parent().removeClass('active');
+          const edgeId = $(e.target).parent().attr('id');
+          const nodes = getNodeNamesFromEdgeId(edgeId);
+          if (nodes && nodes.length === 2) {
+            $(`#${nodes[0]}`).removeClass('active');
+            $(`#${nodes[1]}`).removeClass('active');
+          }
+        });
     }
   }
 
@@ -414,9 +507,12 @@ export default class FieldView extends React.PureComponent<Props, State> {
                             <LoadingPlaceholder text="正在加载请求链数据，请稍后..." />
                           </div>
                         ) : (
-                          this.state.grahpData.map((o, n) => (
-                            <div key={n} dangerouslySetInnerHTML={{ __html: JSON.stringify(o) }}></div>
-                          ))
+                          <div
+                            ref={(container) => {
+                              this.graphViewContainer = container;
+                            }}
+                            dangerouslySetInnerHTML={{ __html: this.state.svg }}
+                          ></div>
                         )}
                       </Drawer>
                     )}
