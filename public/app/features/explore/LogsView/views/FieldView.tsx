@@ -14,6 +14,7 @@ import copy from 'copy-to-clipboard';
 import tsdb from '../tsdb';
 import '../../libs/lite.render';
 import { v4 as uuid } from 'uuid';
+import Panzoom from '@panzoom/panzoom';
 
 const moment = require('moment');
 
@@ -204,6 +205,7 @@ export default class FieldView extends React.PureComponent<Props, State> {
   container: HTMLElement | null;
   toggleBtn: HTMLElement | null;
   graphViewContainer: HTMLElement | null;
+  zoomObject: any;
 
   getFileldLink(fieldName: string, fieldValue: string): string {
     const { dataSourceInstanceName, absoluteTimeRange } = this.props;
@@ -395,6 +397,25 @@ export default class FieldView extends React.PureComponent<Props, State> {
             $(`#${nodes[1]}`).removeClass('active');
           }
         });
+
+      let $svg = $('svg', this.graphViewContainer);
+      if ($svg) {
+        $svg.css({
+          margin: '0 auto',
+          display: 'block',
+        });
+      }
+      if (this.zoomObject) {
+        this.graphViewContainer.removeEventListener('wheel', this.zoomObject.zoomWithWheel);
+        this.zoomObject.destroy();
+      }
+
+      this.zoomObject = Panzoom($svg[0], {
+        maxScale: 5,
+        animate: true,
+      });
+
+      this.graphViewContainer.addEventListener('wheel', this.zoomObject.zoomWithWheel);
     }
   }
 
