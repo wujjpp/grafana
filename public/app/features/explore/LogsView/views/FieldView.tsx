@@ -256,6 +256,24 @@ export default class FieldView extends React.PureComponent<Props, State> {
     }
   }
 
+  // 拼接生成graph的tooltip
+  generateGraphToolTip(obj: any) {
+    let str = '';
+    _.forIn(obj, (value, key) => {
+      if (!_.isObject(value)) {
+        str += `${key}：${value}&#10;`;
+      }
+    });
+    return str;
+  }
+
+  getGraphLink(logId: string) {
+    const { dataSourceInstanceName } = this.props;
+    const params = ['now/y', 'now', dataSourceInstanceName, { queryText: `* and logId:"${logId}"` }];
+    const target = `/explore?orgId=1&left=${encodeURIComponent(JSON.stringify(params))}`;
+    return target;
+  }
+
   showGraphView(requestId: string) {
     this.setState({ ...this.state, graphViewOpened: !this.state.graphViewOpened, isLoadingGraph: true });
 
@@ -283,10 +301,12 @@ export default class FieldView extends React.PureComponent<Props, State> {
         _.forEach(newData, (x) => {
           let fields = JSON.parse(x.fields);
           edges.push({
-            id: uuid(),
+            id: x.logId || uuid(),
             source: fields.requestContext.requestFromAppName,
             target: x.appName,
             label: `${x.timeString}, ${fields.http.httpStatus || ''}`,
+            labeltooltip: this.generateGraphToolTip({ ...x, fields }),
+            url: this.getGraphLink(x.logId),
           });
           nodes.push({
             name: x.appName,
@@ -313,7 +333,9 @@ export default class FieldView extends React.PureComponent<Props, State> {
             return o.source
               ? `${sum}"${o.source}" -> "${o.target}" [id="${o.source}->${o.target}:${o.id}"; label="${
                   o.label
-                }"; color="${o.color || edgeColor}";fontcolor="${o.fontColor || edgeFontColor}"];`
+                }"; labeltooltip="${o.labeltooltip}"; URL="${o.url}"; target="_blank"; color="${
+                  o.color || edgeColor
+                }";fontcolor="${o.fontColor || edgeFontColor}"];`
               : `${sum}`;
           },
           ''
@@ -378,10 +400,10 @@ export default class FieldView extends React.PureComponent<Props, State> {
     }
 
     if (this.graphViewContainer) {
-      $('.edge > text')
+      $('.edge')
         .on('mouseover', (e) => {
-          $(e.target).parent().addClass('active');
-          const edgeId = $(e.target).parent().attr('id');
+          $(e.target).parents('.edge').addClass('active');
+          const edgeId = $(e.target).parents('.edge').attr('id');
           const nodes = getNodeNamesFromEdgeId(edgeId);
           if (nodes && nodes.length === 2) {
             $(`#${nodes[0]}`).addClass('active');
@@ -389,8 +411,8 @@ export default class FieldView extends React.PureComponent<Props, State> {
           }
         })
         .on('mouseout', (e) => {
-          $(e.target).parent().removeClass('active');
-          const edgeId = $(e.target).parent().attr('id');
+          $(e.target).parents('.edge').removeClass('active');
+          const edgeId = $(e.target).parents('.edge').attr('id');
           const nodes = getNodeNamesFromEdgeId(edgeId);
           if (nodes && nodes.length === 2) {
             $(`#${nodes[0]}`).removeClass('active');

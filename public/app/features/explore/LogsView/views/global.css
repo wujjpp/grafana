@@ -93,15 +93,15 @@ Monokai style - ported by Luigi Maselli - http://grigio.org
 .edge > text{
   cursor: pointer;
 }
-.edge.active > path{
+.edge.active path{
   stroke-dasharray: 8;
   animation: custom-dash-line 10s linear infinite reverse;
   stroke: red !important;
 }
-.edge.active > text{
+.edge.active text{
   fill: red !important;
 }
-.edge.active > polygon{
+.edge.active polygon{
   fill: red !important;
   stroke: red !important;
 }
