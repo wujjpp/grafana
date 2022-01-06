@@ -277,6 +277,11 @@ export default class FieldView extends React.PureComponent<Props, State> {
   showGraphView(requestId: string) {
     this.setState({ ...this.state, graphViewOpened: !this.state.graphViewOpened, isLoadingGraph: true });
 
+    // 关闭Drawer不重新进行渲染
+    if (this.state.graphViewOpened) {
+      return;
+    }
+
     const { dataSourceId, absoluteTimeRange } = this.props;
     const { from, to } = absoluteTimeRange;
 
