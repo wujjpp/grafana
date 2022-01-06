@@ -433,6 +433,12 @@ export default class FieldView extends React.PureComponent<Props, State> {
           display: 'block',
         });
       }
+      let textDoms = $('svg text', this.graphViewContainer);
+      if (textDoms.length) {
+        _.forEach(textDoms, (dom) => {
+          $(dom).attr('text-rendering', 'geometricPrecision');
+        });
+      }
       if (this.zoomObject) {
         this.graphViewContainer.removeEventListener('wheel', this.zoomObject.zoomWithWheel);
         this.zoomObject.destroy();
