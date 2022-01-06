@@ -241,6 +241,7 @@
     "eventemitter3": "4.0.0",
     "fast-text-encoding": "^1.0.0",
     "file-saver": "2.0.2",
+    "filesize": "^8.0.6",
     "flatted": "^3.1.1",
     "highlight.js": "^10.7.2",
     "hoist-non-react-statics": "3.3.2",

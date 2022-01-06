@@ -19,6 +19,7 @@ import {
 import { css } from 'emotion';
 import JsonView from './JsonView';
 import axios from 'axios';
+import filesize from 'filesize';
 
 interface Props {
   onClose: () => void;
@@ -39,6 +40,7 @@ interface State {
   tabs: TabConfig[];
   responseStatus?: any;
   responseHeaders?: any;
+  responseSize: number;
   responseBody?: any;
   isRequesting: boolean;
   errorMessage: string;
@@ -66,6 +68,7 @@ export default class DiagnosticsView extends React.Component<Props, State> {
     isRequesting: false,
     errorMessage: '',
     responseTime: 0,
+    responseSize: 0,
   };
 
   setTabActive(index: number): void {
@@ -103,6 +106,8 @@ export default class DiagnosticsView extends React.Component<Props, State> {
       })
       .then((response) => {
         end = new Date().getTime();
+
+        console.log(response);
         const data = response.data;
         const status = response.status;
         const responseHeaders = response.headers;
@@ -113,6 +118,7 @@ export default class DiagnosticsView extends React.Component<Props, State> {
           }),
           responseStatus: status,
           responseHeaders: responseHeaders,
+          responseSize: new Blob([JSON.stringify(data)]).size || 0,
           responseBody: data,
           errorMessage: '',
         });
@@ -130,6 +136,7 @@ export default class DiagnosticsView extends React.Component<Props, State> {
             }),
             responseStatus: status,
             responseHeaders: responseHeaders,
+            responseSize: responseHeaders['content-length'] || '',
             responseBody: data,
           });
         } else if (error.request) {
@@ -144,6 +151,7 @@ export default class DiagnosticsView extends React.Component<Props, State> {
             responseStatus: -1,
             responseHeaders: {},
             responseBody: {},
+            responseSize: 0,
             errorMessage: 'The request was made but no response was received',
           });
         } else {
@@ -156,6 +164,7 @@ export default class DiagnosticsView extends React.Component<Props, State> {
             responseStatus: -1,
             responseHeaders: {},
             responseBody: {},
+            responseSize: 0,
             errorMessage: error.message,
           });
         }
@@ -247,6 +256,15 @@ export default class DiagnosticsView extends React.Component<Props, State> {
                         <span
                           className={this.state.responseTime <= 200 ? this.styles.colorSuccess : this.styles.colorError}
                         >{`${this.state.responseTime} ms`}</span>
+                      </div>
+
+                      <div className={`${this.styles.fieldContainer} ${this.styles.paddingTop0}`}>
+                        <span>Response Size</span>&nbsp;:&nbsp;&nbsp;
+                        <span
+                          className={
+                            this.state.responseSize <= 1024 * 50 ? this.styles.colorSuccess : this.styles.colorError
+                          }
+                        >{`${filesize(this.state.responseSize)}`}</span>
                       </div>
 
                       <Field label="Response Body">

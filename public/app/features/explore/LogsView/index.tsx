@@ -385,8 +385,13 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
       });
   }
 
+  // 是否能回放
   canPlay(v: any): boolean {
-    if (v?.category === 'http' && v?.appName === 'nodejs-qcc-backend-data' && v?.fields?.requestContext?.path) {
+    if (
+      (v?.category === 'http' || v?.fields?.eventType === 'slowQuery') &&
+      v?.appName === 'nodejs-qcc-backend-data' &&
+      v?.fields?.requestContext?.path
+    ) {
       return true;
     }
     return false;
@@ -593,7 +598,7 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
                           <Icon name={this.getIconName(i)}></Icon>
                           {dateTimeParse(+v['time'] || +v['__time__'] * 1000).format('YYYY-MM-DD HH:mm:ss.SSS')}
 
-                          {/* 播放按钮 */}
+                          {/* 接口诊断按钮 */}
                           {this.canPlay(v) && (
                             <div
                               className={this.styles.playItem}
