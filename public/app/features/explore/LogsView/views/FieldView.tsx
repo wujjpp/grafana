@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { Icon, stylesFactory, Drawer, LoadingPlaceholder } from '@grafana/ui';
+import { Icon, stylesFactory, Modal, LoadingPlaceholder } from '@grafana/ui';
 import { AbsoluteTimeRange } from '@grafana/data';
 import { css } from 'emotion';
 import _ from 'lodash';
@@ -126,6 +126,10 @@ const styles = stylesFactory(() => {
       margin-left: -16px;
       cursor: pointer;
       vertical-align: middle;
+    `,
+
+    graphViewerModal: css`
+      width: 1366px;
     `,
   };
 })();
@@ -350,8 +354,8 @@ export default class FieldView extends React.PureComponent<Props, State> {
           bgcolor="transparent";
           fontsize=20;
           rankdir="LR";
-          node [fontname="Verdana"; size="1,1"; fontsize=12; color="${nodeColor}"; fontcolor="${nodeFontColor}"];
-          edge [arrowhead=vee; fontname="Verdana"; fontsize=12; fontcolor="${edgeFontColor}"; color="${edgeColor}"];
+          node [fontname="Verdana"; size="1,1"; fontsize=10; color="${nodeColor}"; fontcolor="${nodeFontColor}"];
+          edge [arrowhead=vee; fontname="Verdana"; fontsize=10; fontcolor="${edgeFontColor}"; color="${edgeColor}"];
           ${nodeStrings}
           ${edgeStrings}
         }`;
@@ -532,30 +536,14 @@ export default class FieldView extends React.PureComponent<Props, State> {
                     </span>
 
                     {this.state.graphViewOpened && (
-                      // <Modal
-                      //   icon="reusable-panel"
-                      //   closeOnEscape={true}
-                      //   onClickBackdrop={() => {}}
-                      //   onDismiss={this.showGraphView.bind(this, value)}
-                      //   title="请求链"
-                      //   isOpen={true}
-                      // >
-                      //   {this.state.isLoadingGraph ? (
-                      //     <div style={{ textAlign: 'center' }}>
-                      //       <LoadingPlaceholder text="正在加载请求链数据，请稍后..." />
-                      //     </div>
-                      //   ) : (
-                      //     this.state.grahpData.map((o, n) => (
-                      //       <div key={n} dangerouslySetInnerHTML={{ __html: JSON.stringify(o) }}></div>
-                      //     ))
-                      //   )}
-                      // </Modal>
-
-                      <Drawer
+                      <Modal
+                        icon="reusable-panel"
+                        closeOnEscape={true}
+                        onClickBackdrop={() => {}}
+                        onDismiss={this.showGraphView.bind(this, value)}
                         title="请求链"
-                        scrollableContent={true}
-                        width={'50%'}
-                        onClose={this.showGraphView.bind(this, value)}
+                        isOpen={true}
+                        className={styles.graphViewerModal}
                       >
                         {this.state.isLoadingGraph ? (
                           <div style={{ textAlign: 'center' }}>
@@ -563,13 +551,35 @@ export default class FieldView extends React.PureComponent<Props, State> {
                           </div>
                         ) : (
                           <div
+                            style={{ height: '100%' }}
                             ref={(container) => {
                               this.graphViewContainer = container;
                             }}
                             dangerouslySetInnerHTML={{ __html: this.state.svg }}
                           ></div>
                         )}
-                      </Drawer>
+                      </Modal>
+
+                      // <Drawer
+                      //   title="请求链"
+                      //   scrollableContent={false}
+                      //   width={'80%'}
+                      //   onClose={this.showGraphView.bind(this, value)}
+                      // >
+                      //   {this.state.isLoadingGraph ? (
+                      //     <div style={{ textAlign: 'center' }}>
+                      //       <LoadingPlaceholder text="正在加载请求链数据，请稍后..." />
+                      //     </div>
+                      //   ) : (
+                      //     <div
+                      //       style={{ height: '100%' }}
+                      //       ref={(container) => {
+                      //         this.graphViewContainer = container;
+                      //       }}
+                      //       dangerouslySetInnerHTML={{ __html: this.state.svg }}
+                      //     ></div>
+                      //   )}
+                      // </Drawer>
                     )}
                   </>
                 )}
