@@ -71,6 +71,7 @@ module.exports = (env = {}) =>
                   ],
                   '@babel/preset-react',
                 ],
+                ignore: ['./public/app/features/explore/libs/lite.render.js'],
               },
             },
           ],
@@ -100,6 +101,9 @@ module.exports = (env = {}) =>
                 semantic: true,
                 syntactic: true,
               },
+            },
+            issue: {
+              exclude: [{ origin: 'typescript', file: '**/*.js' }],
             },
           }),
       new MiniCssExtractPlugin({

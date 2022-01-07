@@ -87,6 +87,7 @@ module.exports = merge(common, {
                 '@babel/preset-typescript',
                 '@babel/preset-react',
               ],
+              ignore: ['./public/app/features/explore/libs/lite.render.js'],
             },
           },
         ],

@@ -9,3 +9,4 @@ data/
 e2e/tmp
 public/build/
 devenv/
+public/app/features/explore/libs/
