@@ -90,3 +90,30 @@ Monokai style - ported by Luigi Maselli - http://grigio.org
   font-weight: bold;
 }
 
+.edge > text{
+  cursor: pointer;
+}
+.edge.active path{
+  stroke-dasharray: 8;
+  animation: custom-dash-line 10s linear infinite reverse;
+  stroke: red !important;
+}
+.edge.active text{
+  fill: red !important;
+}
+.edge.active polygon{
+  fill: red !important;
+  stroke: red !important;
+}
+.node {
+  cursor: pointer;
+}
+.node.active > ellipse{
+  stroke: red !important;
+}
+.node.active > text{
+  fill: red !important;
+}
+
+
+
