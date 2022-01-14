@@ -115,6 +115,18 @@ const SHOULD_ADD_LINK_TO_EXPLORE = [
   'fields.requestContext.requestFromHeadClusterName',
 ];
 
+// 哪些字段需要展示在tooltip里
+const SHOULD_SHOW_GRAPH_TOOLTIP = [
+  'appName',
+  'time',
+  'version',
+  'fields.http.contentLength',
+  'fields.http.httpStatus',
+  'fields.http.responseTime',
+  'fields.requestContext.appVersion',
+  'fields.requestContext.path',
+];
+
 export default {
   flattenObject,
   stringToJson,
@@ -122,4 +134,5 @@ export default {
   getFieldToExploreLink,
   SHOULD_SHOW_ORIGIN_CONTENT_FIELDS,
   SHOULD_ADD_LINK_TO_EXPLORE,
+  SHOULD_SHOW_GRAPH_TOOLTIP,
 };

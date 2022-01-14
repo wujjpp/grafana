@@ -21,7 +21,7 @@ import { SearchFilterItem } from './types';
 import SearchFilterView from './views/SearchFilterView';
 import ValueFilterView from './views/ValueFilterView';
 import ColumnFilterView from './views/ColumnFilterView';
-import DiagnosticsView from './views/DiagnosticsView';
+import DiagnosticsDrawer from './views/DiagnosticsDrawer';
 
 interface Props {
   exploreId: ExploreId;
@@ -543,14 +543,14 @@ class LogsView extends Component<PropsFromRedux & Props, State> {
 
         {/* Request & Response Viewer */}
         {this.state.showDiagnostics && (
-          <DiagnosticsView
+          <DiagnosticsDrawer
             onClose={this.closeDiagnosticsPanel.bind(this)}
             path={this.state.selectedLog.path}
             headers={this.state.selectedLog.headers}
             query={this.state.selectedLog.query}
             data={this.state.selectedLog.data}
             method={this.state.selectedLog.method}
-          ></DiagnosticsView>
+          ></DiagnosticsDrawer>
         )}
 
         {/* 顶部Pagination */}

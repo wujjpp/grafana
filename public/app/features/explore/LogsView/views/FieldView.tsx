@@ -13,8 +13,8 @@ import utils from '../utils';
 import copy from 'copy-to-clipboard';
 import tsdb from '../tsdb';
 import '../../libs/lite.render';
-import { v4 as uuid } from 'uuid';
 import Panzoom from '@panzoom/panzoom';
+import { DiagnosticsView } from './DiagnosticsView';
 
 const moment = require('moment');
 
@@ -131,6 +131,17 @@ const styles = stylesFactory(() => {
     graphViewerModal: css`
       width: 1366px;
     `,
+
+    graphDiagnosticsModal: css`
+      width: 1366px;
+    `,
+
+    graphDiagnosticsModalContent: css`
+      max-height: calc(80vh - 16px);
+      padding: 0 0 16px 16px;
+      overflow: hidden;
+      display: flex;
+    `,
   };
 })();
 
@@ -152,6 +163,14 @@ interface State {
   isLoadingGraph: boolean;
   grahpData: any[];
   svg: any;
+  graphDiagnosticsOpened: boolean;
+  selectedGraphLog: {
+    path: string;
+    method: string;
+    headers: any;
+    query: any;
+    data: any;
+  };
 }
 
 // 获取栏位样式
@@ -204,6 +223,14 @@ export default class FieldView extends React.PureComponent<Props, State> {
     isLoadingGraph: false,
     grahpData: [],
     svg: null,
+    graphDiagnosticsOpened: false,
+    selectedGraphLog: {
+      path: '',
+      method: 'GET',
+      headers: {},
+      query: {},
+      data: {},
+    },
   };
 
   container: HTMLElement | null;
@@ -263,11 +290,27 @@ export default class FieldView extends React.PureComponent<Props, State> {
   // 拼接生成graph的tooltip
   generateGraphToolTip(obj: any) {
     let str = '';
-    _.forIn(obj, (value, key) => {
-      if (!_.isObject(value)) {
-        str += `${key}：${value}&#10;`;
-      }
+    let arr: any[] = [];
+
+    _.forEach(utils.SHOULD_SHOW_GRAPH_TOOLTIP, (field) => {
+      arr.push({
+        name: field,
+        value: field
+          .replace(/\[/g, '.')
+          .replace(/\]/g, '')
+          .split('.')
+          .reduce((o, k) => (o || {})[k], obj),
+      });
     });
+
+    _.forEach(arr, (x) => {
+      let value =
+        x.name === 'time' && _.isString(x.value) && x.value.length === 13
+          ? moment(+x.value).format('YYYY-MM-DD HH:mm:ss.SSS')
+          : x.value || '';
+      str += `${x.name}：${value}&#10;`;
+    });
+
     return str;
   }
 
@@ -309,21 +352,21 @@ export default class FieldView extends React.PureComponent<Props, State> {
         let newData = data[0] || [];
 
         _.forEach(newData, (x) => {
-          let fields = JSON.parse(x.fields);
+          x.fields = JSON.parse(x.fields);
           edges.push({
-            id: x.logId || uuid(),
-            source: fields.requestContext.requestFromAppName,
+            id: x.logId,
+            source: x.fields.requestContext.requestFromAppName,
             target: x.appName,
-            label: `${x.timeString}, ${fields.http.httpStatus || ''}`,
-            labeltooltip: this.generateGraphToolTip({ ...x, fields }),
+            label: `${x.timeString}, ${x.fields.http.httpStatus || ''}`,
+            labeltooltip: this.generateGraphToolTip(x),
             url: this.getGraphLink(x.logId),
           });
           nodes.push({
             name: x.appName,
           });
-          if (fields.requestContext.requestFromAppName) {
+          if (x.fields.requestContext.requestFromAppName) {
             nodes.push({
-              name: fields.requestContext.requestFromAppName,
+              name: x.fields.requestContext.requestFromAppName,
             });
           }
         });
@@ -370,6 +413,10 @@ export default class FieldView extends React.PureComponent<Props, State> {
         this.setState({ ...this.state, isLoadingGraph: false });
         console.log(this.state.grahpData);
       });
+  }
+
+  closeGraphDiagnosticsPanel() {
+    this.setState({ ...this.state, graphDiagnosticsOpened: false });
   }
 
   componentDidMount() {
@@ -427,6 +474,27 @@ export default class FieldView extends React.PureComponent<Props, State> {
           if (nodes && nodes.length === 2) {
             $(`#${nodes[0]}`).removeClass('active');
             $(`#${nodes[1]}`).removeClass('active');
+          }
+        })
+        .on('click', (e) => {
+          $(e.target).parents('.edge').removeClass('active');
+          const edgeId = $(e.target).parents('.edge').attr('id');
+          const nodes = getNodeNamesFromEdgeId(edgeId);
+          if (nodes && nodes.length === 2 && nodes[1] === 'nodejs-qcc-backend-data') {
+            e.preventDefault();
+            const logId = edgeId?.split(':')[1];
+            const targetData = _.find(this.state.grahpData[0], (x) => x.logId === logId);
+            this.setState({
+              ...this.state,
+              selectedGraphLog: {
+                path: targetData?.fields?.requestContext?.path || '',
+                method: targetData?.fields?.requestContext?.method || 'GET',
+                headers: targetData?.fields?.requestContext?.headers || '{}',
+                query: targetData?.fields?.requestContext?.query || '{}',
+                data: targetData?.fields?.requestContext?.body || '{}',
+              },
+              graphDiagnosticsOpened: true,
+            });
           }
         });
 
@@ -580,6 +648,24 @@ export default class FieldView extends React.PureComponent<Props, State> {
                       //     ></div>
                       //   )}
                       // </Drawer>
+                    )}
+                    {this.state.graphDiagnosticsOpened && (
+                      <Modal
+                        title="接口诊断"
+                        isOpen={true}
+                        onDismiss={this.closeGraphDiagnosticsPanel.bind(this)}
+                        className={styles.graphDiagnosticsModal}
+                        contentClassName={styles.graphDiagnosticsModalContent}
+                      >
+                        <DiagnosticsView
+                          onClose={this.closeGraphDiagnosticsPanel.bind(this)}
+                          path={this.state.selectedGraphLog.path}
+                          headers={this.state.selectedGraphLog.headers}
+                          query={this.state.selectedGraphLog.query}
+                          data={this.state.selectedGraphLog.data}
+                          method={this.state.selectedGraphLog.method}
+                        ></DiagnosticsView>
+                      </Modal>
                     )}
                   </>
                 )}

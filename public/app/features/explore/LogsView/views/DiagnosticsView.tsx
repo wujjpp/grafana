@@ -4,24 +4,13 @@
 
 import React from 'react';
 import _ from 'lodash';
-import {
-  stylesFactory,
-  Drawer,
-  Button,
-  TabsBar,
-  Tab,
-  TabContent,
-  Field,
-  CustomScrollbar,
-  Alert,
-  Card,
-} from '@grafana/ui';
+import { stylesFactory, Button, TabsBar, Tab, TabContent, Field, CustomScrollbar, Alert, Card } from '@grafana/ui';
 import { css } from 'emotion';
 import JsonView from './JsonView';
 import axios from 'axios';
 import filesize from 'filesize';
 
-interface Props {
+export interface Props {
   onClose: () => void;
   path: string;
   method: string;
@@ -49,7 +38,7 @@ interface State {
 
 const DEFAULT_HOST = 'http://10.0.4.180:9600';
 
-export default class DiagnosticsView extends React.Component<Props, State> {
+export class DiagnosticsView extends React.Component<Props, State> {
   styles = getStyles();
 
   state: State = {
@@ -178,136 +167,131 @@ export default class DiagnosticsView extends React.Component<Props, State> {
     const { onClose, path, headers, query, data, method } = this.props;
 
     return (
-      <Drawer width="40%" scrollableContent={false} closeOnMaskClick={true} onClose={onClose}>
-        <div className={this.styles.container}>
-          <div className={this.styles.header}>
-            <h2 className={this.styles.headerTitle}>接口诊断</h2>
-          </div>
-          <div className={this.styles.body}>
-            <TabsBar>
-              {this.state.tabs.map((tab, index) => {
-                return (
-                  <Tab
-                    key={index}
-                    label={tab.label}
-                    active={tab.active}
-                    onChangeTab={this.setTabActive.bind(this, index)}
-                  />
-                );
-              })}
-            </TabsBar>
-            <CustomScrollbar hideHorizontalTrack={true} hideTracksWhenNotNeeded={true}>
-              <div style={{ marginLeft: '-8px', marginRight: '-8px' }}>
-                <TabContent>
-                  {this.state.tabs[0].active && (
-                    <div className={this.styles.formContainer}>
-                      <Card
-                        heading="提示"
-                        description="92版之后的Chrome打开 chrome://flags/ 查找 Block insecure private network requests 设置成Disabled"
-                      />
-                      <div className={this.styles.fieldContainer}>
-                        <span>Url</span>&nbsp;:&nbsp;&nbsp;
-                        <span className={this.styles.colorNormal}>{DEFAULT_HOST + path}</span>
-                      </div>
-
-                      <div className={`${this.styles.fieldContainer} ${this.styles.paddingTop0}`}>
-                        <span>Method</span>&nbsp;:&nbsp;&nbsp;
-                        <span className={this.styles.colorNormal}>{(method || '').toUpperCase()}</span>
-                      </div>
-
-                      {query && (
-                        <Field label="Query">
-                          <div className={this.styles.jsonViewContainer}>
-                            <JsonView entity={JSON.parse(query)}></JsonView>
-                          </div>
-                        </Field>
-                      )}
-                      {data && (
-                        <Field label="Data">
-                          <div className={this.styles.jsonViewContainer}>
-                            <JsonView entity={JSON.parse(data)}></JsonView>
-                          </div>
-                        </Field>
-                      )}
-                      {headers && (
-                        <Field label="Request Headers">
-                          <div className={this.styles.jsonViewContainer}>
-                            <JsonView entity={JSON.parse(headers)}></JsonView>
-                          </div>
-                        </Field>
-                      )}
+      <div className={this.styles.container}>
+        <div className={this.styles.body}>
+          <TabsBar>
+            {this.state.tabs.map((tab, index) => {
+              return (
+                <Tab
+                  key={index}
+                  label={tab.label}
+                  active={tab.active}
+                  onChangeTab={this.setTabActive.bind(this, index)}
+                />
+              );
+            })}
+          </TabsBar>
+          <CustomScrollbar hideHorizontalTrack={true} hideTracksWhenNotNeeded={true}>
+            <div>
+              <TabContent>
+                {this.state.tabs[0].active && (
+                  <div className={this.styles.formContainer}>
+                    <Card
+                      heading="提示"
+                      description="92版之后的Chrome打开 chrome://flags/ 查找 Block insecure private network requests 设置成Disabled"
+                    />
+                    <div className={this.styles.fieldContainer}>
+                      <span>Url</span>&nbsp;:&nbsp;&nbsp;
+                      <span className={this.styles.colorNormal}>{DEFAULT_HOST + path}</span>
                     </div>
-                  )}
-                  {this.state.tabs[1].active && (
-                    <div className={this.styles.formContainer}>
-                      <div className={this.styles.fieldContainer}>
-                        <span>Http Status Code</span>&nbsp;:&nbsp;&nbsp;
-                        <span
-                          className={
-                            this.state.responseStatus === 200 ? this.styles.colorSuccess : this.styles.colorError
-                          }
-                        >
-                          {this.state.responseStatus}
-                        </span>
-                      </div>
 
-                      <div className={`${this.styles.fieldContainer} ${this.styles.paddingTop0}`}>
-                        <span>Response Time</span>&nbsp;:&nbsp;&nbsp;
-                        <span
-                          className={this.state.responseTime <= 200 ? this.styles.colorSuccess : this.styles.colorError}
-                        >{`${this.state.responseTime} ms`}</span>
-                      </div>
+                    <div className={`${this.styles.fieldContainer} ${this.styles.paddingTop0}`}>
+                      <span>Method</span>&nbsp;:&nbsp;&nbsp;
+                      <span className={this.styles.colorNormal}>{(method || '').toUpperCase()}</span>
+                    </div>
 
-                      <div className={`${this.styles.fieldContainer} ${this.styles.paddingTop0}`}>
-                        <span>Response Size</span>&nbsp;:&nbsp;&nbsp;
-                        <span
-                          className={
-                            this.state.responseSize <= 1024 * 50 ? this.styles.colorSuccess : this.styles.colorError
-                          }
-                        >{`${filesize(this.state.responseSize)}`}</span>
-                      </div>
-
-                      <Field label="Response Body">
+                    {query && (
+                      <Field label="Query">
                         <div className={this.styles.jsonViewContainer}>
-                          {this.state.responseBody ? (
-                            <JsonView entity={this.state.responseBody}></JsonView>
-                          ) : (
-                            <span>Empty</span>
-                          )}
+                          <JsonView entity={JSON.parse(query)}></JsonView>
                         </div>
                       </Field>
-                      <Field label="Response Headers">
+                    )}
+                    {data && (
+                      <Field label="Data">
                         <div className={this.styles.jsonViewContainer}>
-                          {this.state.responseHeaders ? (
-                            <JsonView entity={this.state.responseHeaders}></JsonView>
-                          ) : (
-                            <span>Empty</span>
-                          )}
+                          <JsonView entity={JSON.parse(data)}></JsonView>
                         </div>
                       </Field>
-
-                      {this.state.errorMessage && <Alert title={this.state.errorMessage} severity="error" />}
+                    )}
+                    {headers && (
+                      <Field label="Request Headers">
+                        <div className={this.styles.jsonViewContainer}>
+                          <JsonView entity={JSON.parse(headers)}></JsonView>
+                        </div>
+                      </Field>
+                    )}
+                  </div>
+                )}
+                {this.state.tabs[1].active && (
+                  <div className={this.styles.formContainer}>
+                    <div className={this.styles.fieldContainer}>
+                      <span>Http Status Code</span>&nbsp;:&nbsp;&nbsp;
+                      <span
+                        className={
+                          this.state.responseStatus === 200 ? this.styles.colorSuccess : this.styles.colorError
+                        }
+                      >
+                        {this.state.responseStatus}
+                      </span>
                     </div>
-                  )}
-                </TabContent>
-              </div>
-            </CustomScrollbar>
-          </div>
-          <div className={this.styles.footer}>
-            <Button
-              className={this.styles.marginRight16}
-              icon={this.state.isRequesting ? 'fa fa-spinner' : 'rocket'}
-              onClick={this.test.bind(this)}
-              variant={this.state.isRequesting ? 'destructive' : 'primary'}
-            >
-              测试
-            </Button>
-            <Button variant="secondary" icon="times" onClick={onClose}>
-              关闭
-            </Button>
-          </div>
+
+                    <div className={`${this.styles.fieldContainer} ${this.styles.paddingTop0}`}>
+                      <span>Response Time</span>&nbsp;:&nbsp;&nbsp;
+                      <span
+                        className={this.state.responseTime <= 200 ? this.styles.colorSuccess : this.styles.colorError}
+                      >{`${this.state.responseTime} ms`}</span>
+                    </div>
+
+                    <div className={`${this.styles.fieldContainer} ${this.styles.paddingTop0}`}>
+                      <span>Response Size</span>&nbsp;:&nbsp;&nbsp;
+                      <span
+                        className={
+                          this.state.responseSize <= 1024 * 50 ? this.styles.colorSuccess : this.styles.colorError
+                        }
+                      >{`${filesize(this.state.responseSize)}`}</span>
+                    </div>
+
+                    <Field label="Response Body">
+                      <div className={this.styles.jsonViewContainer}>
+                        {this.state.responseBody ? (
+                          <JsonView entity={this.state.responseBody}></JsonView>
+                        ) : (
+                          <span>Empty</span>
+                        )}
+                      </div>
+                    </Field>
+                    <Field label="Response Headers">
+                      <div className={this.styles.jsonViewContainer}>
+                        {this.state.responseHeaders ? (
+                          <JsonView entity={this.state.responseHeaders}></JsonView>
+                        ) : (
+                          <span>Empty</span>
+                        )}
+                      </div>
+                    </Field>
+
+                    {this.state.errorMessage && <Alert title={this.state.errorMessage} severity="error" />}
+                  </div>
+                )}
+              </TabContent>
+            </div>
+          </CustomScrollbar>
         </div>
-      </Drawer>
+        <div className={this.styles.footer}>
+          <Button
+            className={this.styles.marginRight16}
+            icon={this.state.isRequesting ? 'fa fa-spinner' : 'rocket'}
+            onClick={this.test.bind(this)}
+            variant={this.state.isRequesting ? 'destructive' : 'primary'}
+          >
+            测试
+          </Button>
+          <Button variant="secondary" icon="times" onClick={onClose}>
+            关闭
+          </Button>
+        </div>
+      </div>
     );
   }
 }
@@ -317,57 +301,27 @@ const getStyles = stylesFactory(() => {
     container: css`
       display: flex;
       flex-direction: column;
-      height: 100%;
-    `,
-
-    header: css`
-      display: flex;
-      -webkit-box-align: center;
-      align-items: center;
-      position: relative;
-      border-bottom: 1px solid #202226;
-      border-color: #2c3235;
-      padding-left: 16px;
-      padding-right: 16px;
-      margin-left: -16px;
-      margin-right: -16px;
-      padding-bottom: 16px;
-    `,
-
-    headerTitle: css`
-      font-size: 18px;
-      margin-bottom: 0;
-    `,
-
-    headerCloseButton: css`
-      position: absolute;
-      right: 0;
+      flex: 1;
+      overflow-y: hidden;
+      padding-top: 16px;
     `,
 
     body: css`
       flex: 1;
-      padding-top: 16px;
-      padding-bottom: 16px;
       background-color: #141619;
-      padding-left: 16px;
-      padding-right: 0;
-      margin-left: -16px;
-      margin-right: -16px;
       overflow: hidden;
     `,
 
     formContainer: css`
-      padding-right: 16px;
       padding-bottom: 4px;
+      padding-right: 8px;
+      margin-left: -8px;
     `,
 
     footer: css`
       text-align: right;
-      padding-left: 16px;
-      padding-right: 16px;
       padding-top: 16px;
-      margin-left: -16px;
-      margin-right: -16px;
+      padding-right: 16px;
     `,
 
     marginRight16: css`
